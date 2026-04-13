@@ -10,97 +10,95 @@ class SystemStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        // HTML: p-8
-        padding: const EdgeInsets.all(32),
-        color: DC.stone900,
-        child: Stack(
-          children: [
-            // ── Decorative glow — HTML: absolute top-0 right-0 w-64 h-64
-            //    bg-primary-dim/20 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2
-            Positioned(
-              top: -80,
-              right: -80,
-              child: Container(
-                width: 256,
-                height: 256,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: DC.primaryDim.withValues(alpha: 0.2),
-                ),
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool compact = constraints.maxWidth < 360;
+        final double pad = compact ? 16 : 32;
 
-            // ── Content — HTML: flex items-center gap-8
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: EdgeInsets.all(pad),
+            color: DC.stone900,
+            child: Stack(
               children: [
-                // Text block
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // HTML: text-xs font-bold text-primary-fixed-dim uppercase tracking-widest mb-2
-                      Text(
-                        'System Health',
-                        style: manrope(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
+                Positioned(
+                  top: -80,
+                  right: -80,
+                  child: Container(
+                    width: 256,
+                    height: 256,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: DC.primaryDim.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'System Health',
+                            style: manrope(
+                              fontSize: compact ? 9 : 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2,
+                              color: DC.primaryFixedDim,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Store connectivity is excellent',
+                            style: manrope(
+                              fontSize: compact ? 16 : 22,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.35,
+                            ),
+                          ),
+                          SizedBox(height: compact ? 10 : 16),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _PulsingDot(label: 'Main Server: Active'),
+                              SizedBox(height: 8),
+                              _PulsingDot(label: 'Payment Gateway: Online'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!compact) ...[
+                      const SizedBox(width: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.hub_rounded,
+                          size: 28,
                           color: DC.primaryFixedDim,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      // HTML: text-2xl font-bold mb-4
-                      Text(
-                        'Store connectivity is excellent',
-                        style: manrope(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // HTML: flex items-center gap-6
-                      Wrap(
-                        spacing: 24,
-                        runSpacing: 8,
-                        children: const [
-                          _PulsingDot(label: 'Main Server: Active'),
-                          _PulsingDot(label: 'Payment Gateway: Online'),
-                        ],
-                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(width: 32),
-
-                // Hub icon circle
-                // HTML: p-6 rounded-full bg-white/5 backdrop-blur-xl border border-white/10
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.05),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.hub_rounded,
-                    size: 40,
-                    color: DC.primaryFixedDim,
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -155,12 +153,14 @@ class _PulsingDotState extends State<_PulsingDot>
         ),
         const SizedBox(width: 8),
         // HTML: text-xs font-medium text-stone-400
-        Text(
-          widget.label,
-          style: manrope(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: DC.stone400,
+        Flexible(
+          child: Text(
+            widget.label,
+            style: manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: DC.stone400,
+            ),
           ),
         ),
       ],

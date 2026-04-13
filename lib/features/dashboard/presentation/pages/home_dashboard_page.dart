@@ -7,6 +7,8 @@ import '../components/summary_card.dart';
 import '../components/system_status_card.dart';
 import '../components/top_bar_widget.dart';
 import '../components/top_selling_card.dart';
+import '../components/settings_body.dart';
+import '../components/checkout_body.dart';
 import '../theme/dashboard_colors.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -34,11 +36,13 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isWide = constraints.maxWidth >= 720;
+        final bool showPermanentSidebar = false; // User requested to always hide the permanent sidebar
 
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: DC.background,
-          drawer: isWide
+          resizeToAvoidBottomInset: false,
+          drawer: showPermanentSidebar
               ? null
               : Drawer(
                   backgroundColor: DC.stone100,
@@ -50,11 +54,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                     },
                   ),
                 ),
-          floatingActionButton: _DashFab(),
+          floatingActionButton: _DashFab(activeNav: _activeNav),
           body: Row(
             children: [
               // ── Permanent sidebar on wide screens ──────────────────────────
-              if (isWide)
+              if (showPermanentSidebar)
                 SidebarWidget(
                   selected: _activeNav,
                   onSelected: (n) => setState(() => _activeNav = n),
@@ -64,21 +68,27 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               Expanded(
                 child: Column(
                   children: [
-                    TopBarWidget(
-                      leading: isWide
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.menu_rounded,
-                                  color: DC.stone900),
-                              onPressed: () =>
-                                  _scaffoldKey.currentState?.openDrawer(),
-                            ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(32),
-                        child: const _DashboardBody(),
+                    if (_activeNav != NavItem.settings && _activeNav != NavItem.orders)
+                      TopBarWidget(
+                        title: _activeNav == NavItem.dashboard
+                            ? 'Coffee House Dashboard'
+                            : '',
+                        leading: showPermanentSidebar
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.menu_rounded,
+                                    color: DC.stone900),
+                                onPressed: () =>
+                                    _scaffoldKey.currentState?.openDrawer(),
+                              ),
                       ),
+                    Expanded(
+                      child: (_activeNav == NavItem.settings || _activeNav == NavItem.orders)
+                          ? _buildBodyForNav(_activeNav, showPermanentSidebar)
+                          : SingleChildScrollView(
+                              padding: EdgeInsets.all(isWide ? 32 : 12),
+                              child: _buildBodyForNav(_activeNav, showPermanentSidebar),
+                            ),
                     ),
                   ],
                 ),
@@ -89,11 +99,39 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       },
     );
   }
+
+  Widget _buildBodyForNav(NavItem nav, bool showPermanentSidebar) {
+    switch (nav) {
+      case NavItem.dashboard:
+        return const _DashboardBody();
+      case NavItem.orders:
+        return CheckoutBody(
+          leading: showPermanentSidebar
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+        );
+      case NavItem.settings:
+        return SettingsBody(
+          leading: showPermanentSidebar
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+        );
+    }
+  }
 }
 
 // ── FAB ───────────────────────────────────────────────────────────────────────
 
 class _DashFab extends StatefulWidget {
+  final NavItem activeNav;
+  const _DashFab({required this.activeNav});
+
   @override
   State<_DashFab> createState() => _DashFabState();
 }
@@ -107,7 +145,9 @@ class _DashFabState extends State<_DashFab> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          // Future: new order flow
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 64,
@@ -146,9 +186,9 @@ class _DashboardBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         _SummarySection(),
-        SizedBox(height: 32),
+        SizedBox(height: 20),
         _MainGridSection(),
-        SizedBox(height: 32),
+        SizedBox(height: 20),
         _BottomSection(),
         SizedBox(height: 48), // FAB clearance
       ],
@@ -166,12 +206,12 @@ class _SummarySection extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, c) {
         final cards = _buildCards();
-        if (c.maxWidth < 520) {
-          // Single column stack
+        if (c.maxWidth < 600) {
+          // Single column stack for mobile
           return Column(
             children: cards
                 .map((w) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: w,
                     ))
                 .toList(),
@@ -282,7 +322,8 @@ class _MainGridSection extends StatelessWidget {
             ],
           );
         }
-        return const IntrinsicHeight(
+        return const SizedBox(
+          height: 360,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -315,7 +356,8 @@ class _BottomSection extends StatelessWidget {
             ],
           );
         }
-        return const IntrinsicHeight(
+        return const SizedBox(
+          height: 250,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

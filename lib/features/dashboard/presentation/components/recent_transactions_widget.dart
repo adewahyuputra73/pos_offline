@@ -55,89 +55,94 @@ class RecentTransactionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: DC.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: DC.deepBrown.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool compact = constraints.maxWidth < 360;
+        final double pad = compact ? 16 : 32;
+
+        return Container(
+          padding: EdgeInsets.all(pad),
+          decoration: BoxDecoration(
+            color: DC.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: DC.deepBrown.withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // HTML: flex items-center justify-between mb-8
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Recent Sales',
-                style: manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: DC.deepBrown,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Recent Sales',
+                      style: manrope(
+                        fontSize: compact ? 16 : 20,
+                        fontWeight: FontWeight.w700,
+                        color: DC.deepBrown,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Text(
+                      'View All',
+                      style: manrope(
+                        fontSize: compact ? 11 : 13,
+                        fontWeight: FontWeight.w700,
+                        color: DC.primary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: DC.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: compact ? 16 : 24),
+
+              ..._kTx.map(
+                (tx) => Padding(
+                  padding: EdgeInsets.only(bottom: compact ? 12 : 20),
+                  child: _TxRow(tx: tx),
                 ),
               ),
-              const Spacer(),
-              // HTML: text-sm font-bold text-primary hover:underline
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Text(
-                  'View All',
-                  style: manrope(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: DC.primary,
-                    decoration: TextDecoration.underline,
-                    decorationColor: DC.primary,
+
+              const SizedBox(height: 8),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DC.primary,
+                    foregroundColor: DC.onPrimary,
+                    elevation: 0,
+                    shadowColor: DC.primary.withValues(alpha: 0.2),
+                    padding: EdgeInsets.symmetric(vertical: compact ? 12 : 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: manrope(
+                      fontSize: compact ? 12 : 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
                   ),
+                  child: const Text('Create New Order'),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 24),
-
-          // HTML: space-y-6
-          ..._kTx.map(
-            (tx) => Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: _TxRow(tx: tx),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // CTA — HTML: mt-8 w-full py-4 bg-primary text-on-primary rounded-xl font-bold
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: DC.primary,
-                foregroundColor: DC.onPrimary,
-                elevation: 0,
-                shadowColor: DC.primary.withValues(alpha: 0.2),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                textStyle: manrope(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              child: const Text('Create New Order'),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

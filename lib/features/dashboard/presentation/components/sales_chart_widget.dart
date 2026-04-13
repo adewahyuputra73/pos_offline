@@ -40,133 +40,134 @@ class _SalesChartWidgetState extends State<SalesChartWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: DC.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: DC.deepBrown.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header row ──────────────────────────────────────────────────────
-          // HTML: flex items-center justify-between mb-10
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // HTML: text-xl font-bold text-[#2d2514]
-                    Text(
-                      'Sales Performance',
-                      style: manrope(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: DC.deepBrown,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // HTML: text-sm text-on-surface-variant/70
-                    Text(
-                      'Weekly overview of revenue stream',
-                      style: manrope(
-                        fontSize: 13,
-                        color: DC.onSurfaceVariant.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // HTML: flex gap-2 — period toggle buttons
-              Row(
-                children: ['WEEKLY', 'MONTHLY'].map((p) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: _PeriodBtn(
-                      label: p,
-                      selected: p == _period,
-                      onTap: () => setState(() => _period = p),
-                    ),
-                  );
-                }).toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool compact = constraints.maxWidth < 400;
+        final double pad = compact ? 16 : 32;
+        final double chartHeight = compact ? 180 : 300;
+
+        return Container(
+          padding: EdgeInsets.all(pad),
+          decoration: BoxDecoration(
+            color: DC.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: DC.deepBrown.withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-
-          const SizedBox(height: 40),
-
-          // ── Chart area — HTML: relative h-[300px] ──────────────────────────
-          SizedBox(
-            height: 300,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                // HTML: absolute inset-0 — 4 horizontal grid lines
-                Positioned.fill(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(
-                      4,
-                      (_) => Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: DC.surfaceContainer,
-                      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ────────────────────────────────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sales Performance',
+                    style: manrope(
+                      fontSize: compact ? 16 : 20,
+                      fontWeight: FontWeight.w700,
+                      color: DC.deepBrown,
                     ),
                   ),
-                ),
-                // Bars row
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: Row(
-                    key: ValueKey(_period),
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: _bars
-                        .map((b) => _BarWidget(bar: b))
-                        .toList(),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Weekly overview of revenue stream',
+                    style: manrope(
+                      fontSize: compact ? 11 : 13,
+                      color: DC.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Day labels — HTML: flex justify-between mt-6 ──────────────────
-          const SizedBox(height: 24),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Row(
-              key: ValueKey('${_period}_labels'),
-              children: _bars
-                  .map(
-                    (b) => Expanded(
-                      child: Text(
-                        b.day,
-                        textAlign: TextAlign.center,
-                        // HTML: text-[10px] font-bold text-on-surface-variant/50 tracking-widest uppercase
-                        style: manrope(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.4,
-                          color:
-                              DC.onSurfaceVariant.withValues(alpha: 0.5),
+                  const SizedBox(height: 12),
+                  // Period toggle buttons — always in a row, compact sizing
+                  Row(
+                    children: ['WEEKLY', 'MONTHLY'].map((p) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _PeriodBtn(
+                          label: p,
+                          selected: p == _period,
+                          onTap: () => setState(() => _period = p),
+                          compact: compact,
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: compact ? 20 : 40),
+
+              // ── Chart area ────────────────────────────────────────────────
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, boxConstraints) {
+                    return Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Positioned.fill(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(
+                              4,
+                              (_) => Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: DC.surfaceContainer,
+                              ),
+                            ),
+                          ),
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Row(
+                            key: ValueKey(_period),
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: _bars
+                                .map((b) => _BarWidget(
+                                    bar: b, chartHeight: boxConstraints.maxHeight))
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                ),
+              ),
+
+              // ── Day labels ────────────────────────────────────────────────
+              SizedBox(height: compact ? 12 : 24),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Row(
+                  key: ValueKey('${_period}_labels'),
+                  children: _bars
+                      .map(
+                        (b) => Expanded(
+                          child: Text(
+                            b.day,
+                            textAlign: TextAlign.center,
+                            style: manrope(
+                              fontSize: compact ? 8 : 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: compact ? 0.8 : 1.4,
+                              color:
+                                  DC.onSurfaceVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -190,7 +191,8 @@ class _Bar {
 
 class _BarWidget extends StatefulWidget {
   final _Bar bar;
-  const _BarWidget({required this.bar});
+  final double chartHeight;
+  const _BarWidget({required this.bar, this.chartHeight = 300});
 
   @override
   State<_BarWidget> createState() => _BarWidgetState();
@@ -214,35 +216,50 @@ class _BarWidgetState extends State<_BarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final bool compact = widget.chartHeight < 250;
+    // Reserve space for tooltip so bars never overflow
+    final double tooltipReserve = compact ? 24 : 30;
+    final double maxBarHeight = widget.chartHeight - tooltipReserve;
+    final double barHeight = maxBarHeight * widget.bar.ratio;
+
     return Expanded(
       child: MouseRegion(
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         cursor: SystemMouseCursors.click,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 2 : 5),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // Tooltip — HTML: opacity-0 group-hover:opacity-100
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
-                opacity: _hovered ? 1.0 : 0.0,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    // HTML: bg-on-surface text-white
-                    color: DC.onSurface,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    widget.bar.label,
-                    style: manrope(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              // Tooltip — fixed height reserve so it doesn't push bars out
+              SizedBox(
+                height: tooltipReserve,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: _hovered ? 1.0 : 0.0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 2),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: compact ? 4 : 8,
+                        vertical: compact ? 2 : 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: DC.onSurface,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        widget.bar.label,
+                        style: manrope(
+                          fontSize: compact ? 8 : 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -250,7 +267,7 @@ class _BarWidgetState extends State<_BarWidget> {
               // The bar
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                height: 300 * widget.bar.ratio,
+                height: barHeight,
                 decoration: BoxDecoration(
                   color: _baseColor,
                   borderRadius:
@@ -271,31 +288,32 @@ class _PeriodBtn extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool compact;
 
   const _PeriodBtn({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      // HTML: bg-surface-container-high rounded-full (active) | transparent (inactive)
       color: selected ? DC.surfaceContainerHigh : Colors.transparent,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          // HTML: px-4 py-2
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 16,
+            vertical: compact ? 6 : 8,
+          ),
           child: Text(
             label,
             style: manrope(
-              // HTML: text-xs font-bold
-              fontSize: 11,
+              fontSize: compact ? 9 : 11,
               fontWeight: FontWeight.w700,
               color: selected
                   ? DC.onSurface

@@ -7,55 +7,70 @@ import '../theme/dashboard_colors.dart';
 /// [leading] is set to a hamburger icon on narrow screens.
 class TopBarWidget extends StatelessWidget {
   final String title;
+  final Widget? titleWidget;
   final Widget? leading;
 
   const TopBarWidget({
     super.key,
     this.title = 'Coffee House Dashboard',
+    this.titleWidget,
     this.leading,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // HTML: py-6 → 24 top/bottom; px-8 → 32 left/right
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-      color: DC.stone50,
-      child: Row(
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 8)],
-
-          // HTML: text-2xl font-semibold tracking-tight
-          Expanded(
-            child: Text(
-              title,
-              style: manrope(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: DC.stone900,
-                letterSpacing: -0.5,
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool compact = constraints.maxWidth < 600;
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 16 : 32,
+            vertical: 20,
           ),
+          color: DC.stone50,
+          child: Row(
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 8)],
 
-          // HTML: gap-6 between profile chip and bell
-          _ProfileChip(),
-          const SizedBox(width: 24),
-          _NotifButton(),
-        ],
-      ),
+              // HTML: text-2xl font-semibold tracking-tight
+              Expanded(
+                child: titleWidget ?? Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: manrope(
+                    fontSize: compact ? 18 : 24,
+                    fontWeight: FontWeight.w600,
+                    color: DC.stone900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+
+              // HTML: gap-6 between profile chip and bell
+              _ProfileChip(compact: compact),
+              const SizedBox(width: 12),
+              _NotifButton(),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 /// `<div class="flex items-center gap-3 px-4 py-2 rounded-full bg-surface-container-low">`
 class _ProfileChip extends StatelessWidget {
+  final bool compact;
+  const _ProfileChip({this.compact = false});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 16,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
-        // HTML: bg-surface-container-low (#f2f4f4)
         color: DC.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
       ),
@@ -89,16 +104,18 @@ class _ProfileChip extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // HTML: text-sm font-medium text-on-surface-variant
-          Text(
-            'Alex Rivera',
-            style: manrope(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: DC.onSurfaceVariant,
+          // Hide name on compact (mobile) to prevent overflow
+          if (!compact) ...[
+            const SizedBox(width: 12),
+            Text(
+              'Alex Rivera',
+              style: manrope(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: DC.onSurfaceVariant,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -25,69 +25,78 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // HTML: p-8 = 32dp all sides
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: DC.surfaceContainerLowest, // #ffffff
-        borderRadius: BorderRadius.circular(12), // rounded-xl = 0.75rem
-        boxShadow: [
-          // HTML: shadow-[0_4px_20px_rgba(45,37,20,0.04)]
-          BoxShadow(
-            color: const Color(0xFF2D2514).withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // HTML: flex items-start justify-between mb-6
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // HTML: p-3 rounded-lg bg-primary-container
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              // HTML: text-xs font-bold tracking-widest text-on-surface-variant/60 uppercase
-              Text(
-                label,
-                style: manrope(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.6,
-                  color: DC.onSurfaceVariant.withValues(alpha: 0.6),
-                ),
-                textAlign: TextAlign.right,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool compact = constraints.maxWidth < 200;
+        final double pad = compact ? 16 : 32;
+
+        return Container(
+          padding: EdgeInsets.all(pad),
+          decoration: BoxDecoration(
+            color: DC.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2D2514).withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(compact ? 8 : 12),
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: iconColor, size: compact ? 18 : 22),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: manrope(
+                        fontSize: compact ? 8 : 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: compact ? 0.8 : 1.6,
+                        color: DC.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                      textAlign: TextAlign.right,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
 
-          // HTML: mb-6 → space-y-1 below
-          const SizedBox(height: 24),
+              SizedBox(height: compact ? 12 : 24),
 
-          // HTML: text-4xl font-extrabold text-[#2d2514] tracking-tight
-          Text(
-            value,
-            style: manrope(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-              color: DC.deepBrown,
-              letterSpacing: -1.0,
-            ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: manrope(
+                    fontSize: compact ? 24 : 36,
+                    fontWeight: FontWeight.w800,
+                    color: DC.deepBrown,
+                    letterSpacing: -1.0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              subtitle,
+            ],
           ),
-          const SizedBox(height: 4),
-          subtitle,
-        ],
-      ),
+        );
+      },
     );
   }
 }

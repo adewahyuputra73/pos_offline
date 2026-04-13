@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-enum NavItem { dashboard, products, categories, settings }
+enum NavItem { dashboard, orders, settings }
 
 /// Fixed 256-dp sidebar — mirrors the HTML `<aside class="w-64 fixed ...">`.
 ///
@@ -29,7 +29,6 @@ class SidebarWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── BARISTA POS brand ──────────────────────────────────────────────
-          // HTML: px-6 py-8 text-lg font-black uppercase tracking-tighter
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
             child: Text(
@@ -44,7 +43,6 @@ class SidebarWidget extends StatelessWidget {
           ),
 
           // ── Primary nav items ──────────────────────────────────────────────
-          // HTML: flex-1 space-y-1
           _NavTile(
             icon: Icons.dashboard_outlined,
             activeIcon: Icons.dashboard_rounded,
@@ -53,23 +51,16 @@ class SidebarWidget extends StatelessWidget {
             onTap: () => onSelected(NavItem.dashboard),
           ),
           _NavTile(
-            icon: Icons.inventory_2_outlined,
-            activeIcon: Icons.inventory_2_rounded,
-            label: 'PRODUCTS',
-            selected: selected == NavItem.products,
-            onTap: () => onSelected(NavItem.products),
-          ),
-          _NavTile(
-            icon: Icons.category_outlined,
-            activeIcon: Icons.category_rounded,
-            label: 'CATEGORIES',
-            selected: selected == NavItem.categories,
-            onTap: () => onSelected(NavItem.categories),
+            icon: Icons.receipt_long_outlined,
+            activeIcon: Icons.receipt_long_rounded,
+            label: 'ORDERS',
+            selected: selected == NavItem.orders,
+            onTap: () => onSelected(NavItem.orders),
           ),
 
           const Spacer(),
 
-          // ── Settings pinned at bottom (HTML: mt-auto) ──────────────────────
+          // ── Settings pinned at bottom ──────────────────────────────────────
           _NavTile(
             icon: Icons.settings_outlined,
             activeIcon: Icons.settings_rounded,
@@ -77,7 +68,6 @@ class SidebarWidget extends StatelessWidget {
             selected: selected == NavItem.settings,
             onTap: () => onSelected(NavItem.settings),
           ),
-          // HTML: py-6 bottom padding
           const SizedBox(height: 24),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/category.dart';
 import '../models/product.dart';
+import '../models/store_profile.dart';
 import '../models/transaction.dart';
 
 /// Persistent storage backed by [SharedPreferences].
@@ -14,6 +15,7 @@ class StorageService {
   static const _kProducts = 'border_po.products';
   static const _kCategories = 'border_po.categories';
   static const _kTransactions = 'border_po.transactions';
+  static const _kStoreProfile = 'border_po.store_profile';
 
   final SharedPreferences _prefs;
 
@@ -82,5 +84,21 @@ class StorageService {
     await _prefs.remove(_kProducts);
     await _prefs.remove(_kCategories);
     await _prefs.remove(_kTransactions);
+    await _prefs.remove(_kStoreProfile);
+  }
+
+  // ---------------- Store Profile ----------------
+
+  StoreProfile loadStoreProfile() {
+    final raw = _prefs.getString(_kStoreProfile);
+    if (raw == null || raw.isEmpty) return const StoreProfile();
+    return StoreProfile.fromJson(
+      jsonDecode(raw) as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> saveStoreProfile(StoreProfile profile) async {
+    final raw = jsonEncode(profile.toJson());
+    await _prefs.setString(_kStoreProfile, raw);
   }
 }

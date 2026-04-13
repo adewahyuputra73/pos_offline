@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/category.dart';
 import '../models/product.dart';
+import '../models/store_profile.dart';
 import '../models/transaction.dart';
 import '../services/storage_service.dart';
 
@@ -26,6 +27,7 @@ class AppState extends ChangeNotifier {
     _products = _storage.loadProducts();
     _categories = _storage.loadCategories();
     _transactions = _storage.loadTransactions();
+    _storeProfile = _storage.loadStoreProfile();
   }
 
   final StorageService _storage;
@@ -34,6 +36,7 @@ class AppState extends ChangeNotifier {
   late List<Product> _products;
   late List<ProductCategory> _categories;
   late List<TransactionRecord> _transactions;
+  StoreProfile _storeProfile = const StoreProfile();
   final List<CartLine> _cart = [];
 
   // ---------------- Getters ----------------
@@ -47,6 +50,7 @@ class AppState extends ChangeNotifier {
   }
 
   List<CartLine> get cart => List.unmodifiable(_cart);
+  StoreProfile get storeProfile => _storeProfile;
   int get cartItemCount =>
       _cart.fold<int>(0, (sum, line) => sum + line.quantity);
   int get cartTotal => _cart.fold<int>(0, (sum, line) => sum + line.subtotal);
@@ -82,16 +86,22 @@ class AppState extends ChangeNotifier {
 
   // ---------------- Categories CRUD ----------------
 
-  Future<void> addCategory(String name) async {
-    final c = ProductCategory(id: _uuid.v4(), name: name.trim());
+  Future<void> addCategory(String name, {String? imageBase64}) async {
+    final c = ProductCategory(
+      id: _uuid.v4(),
+      name: name.trim(),
+      imageBase64: imageBase64,
+    );
     _categories = [..._categories, c];
     await _storage.saveCategories(_categories);
     notifyListeners();
   }
 
-  Future<void> updateCategory(String id, String name) async {
+  Future<void> updateCategory(String id, String name, {String? imageBase64}) async {
     _categories = _categories
-        .map((c) => c.id == id ? c.copyWith(name: name.trim()) : c)
+        .map((c) => c.id == id
+            ? c.copyWith(name: name.trim(), imageBase64: imageBase64)
+            : c)
         .toList();
     await _storage.saveCategories(_categories);
     notifyListeners();
@@ -108,18 +118,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---------------- Store Profile ----------------
+
+  Future<void> updateStoreProfile(StoreProfile profile) async {
+    _storeProfile = profile;
+    await _storage.saveStoreProfile(profile);
+    notifyListeners();
+  }
+
   // ---------------- Products CRUD ----------------
 
   Future<void> addProduct({
     required String name,
     required int price,
     String? categoryId,
+    String? imageBase64,
   }) async {
     final p = Product(
       id: _uuid.v4(),
       name: name.trim(),
       price: price,
       categoryId: categoryId,
+      imageBase64: imageBase64,
     );
     _products = [..._products, p];
     await _storage.saveProducts(_products);
@@ -131,10 +151,11 @@ class AppState extends ChangeNotifier {
     required String name,
     required int price,
     String? categoryId,
+    String? imageBase64,
   }) async {
     _products = _products.map((p) {
       if (p.id != id) return p;
-      return p.copyWith(name: name.trim(), price: price, categoryId: categoryId);
+      return p.copyWith(name: name.trim(), price: price, categoryId: categoryId, imageBase64: imageBase64);
     }).toList();
     await _storage.saveProducts(_products);
     notifyListeners();
