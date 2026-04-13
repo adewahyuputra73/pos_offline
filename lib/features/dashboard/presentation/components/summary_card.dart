@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-/// Reusable bento-style summary card (Today's Revenue / Transactions /
-/// Inventory Items). Mirrors the three `<div>` cards at the top of the HTML.
+/// `<div class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_4px_20px_rgba(45,37,20,0.04)]">`
 ///
-/// The [subtitle] slot accepts any widget so each card can display a
-/// different flavour of metadata (trend %, sync time, low-stock warning).
+/// White card with ambient brown shadow. [subtitle] slot for trend/info row.
 class SummaryCard extends StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
   final String label;
   final String value;
-
-  /// Rendered below the main value — pass one of the subtitle helpers below.
   final Widget subtitle;
 
   const SummaryCard({
@@ -30,13 +26,15 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // HTML: p-8 = 32dp all sides
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: DC.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
+        color: DC.surfaceContainerLowest, // #ffffff
+        borderRadius: BorderRadius.circular(12), // rounded-xl = 0.75rem
         boxShadow: [
+          // HTML: shadow-[0_4px_20px_rgba(45,37,20,0.04)]
           BoxShadow(
-            color: DC.deepBrown.withValues(alpha: 0.04),
+            color: const Color(0xFF2D2514).withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -45,41 +43,45 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Icon + label row ───────────────────────────────────────────────
+          // HTML: flex items-start justify-between mb-6
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // HTML: p-3 rounded-lg bg-primary-container
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: iconBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: iconColor, size: 22),
               ),
+              // HTML: text-xs font-bold tracking-widest text-on-surface-variant/60 uppercase
               Text(
                 label,
                 style: manrope(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.4,
+                  letterSpacing: 1.6,
                   color: DC.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
+                textAlign: TextAlign.right,
               ),
             ],
           ),
 
+          // HTML: mb-6 → space-y-1 below
           const SizedBox(height: 24),
 
-          // ── Big number ─────────────────────────────────────────────────────
+          // HTML: text-4xl font-extrabold text-[#2d2514] tracking-tight
           Text(
             value,
             style: manrope(
-              fontSize: 38,
+              fontSize: 36,
               fontWeight: FontWeight.w800,
               color: DC.deepBrown,
-              letterSpacing: -1.5,
+              letterSpacing: -1.0,
             ),
           ),
           const SizedBox(height: 4),
@@ -92,7 +94,8 @@ class SummaryCard extends StatelessWidget {
 
 // ── Subtitle helpers ──────────────────────────────────────────────────────────
 
-/// "+12.5% from yesterday" style row.
+/// `<div class="flex items-center gap-1 text-tertiary font-medium text-sm">`
+/// Used for trend (green/olive) and warning (error) rows.
 class TrendSubtitle extends StatelessWidget {
   final String text;
   final IconData icon;
@@ -109,14 +112,16 @@ class TrendSubtitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: color),
+        Icon(icon, size: 16, color: color),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: manrope(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: color,
+        Flexible(
+          child: Text(
+            text,
+            style: manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -124,7 +129,7 @@ class TrendSubtitle extends StatelessWidget {
   }
 }
 
-/// "Last sync: 2m ago" or any icon + muted text row.
+/// `<div class="flex items-center gap-1 text-on-surface-variant/70 font-medium text-sm">`
 class InfoSubtitle extends StatelessWidget {
   final String text;
   final IconData icon;
@@ -135,18 +140,17 @@ class InfoSubtitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 15,
-          color: DC.onSurfaceVariant.withValues(alpha: 0.7),
-        ),
+        Icon(icon, size: 16,
+            color: DC.onSurfaceVariant.withValues(alpha: 0.7)),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: manrope(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: DC.onSurfaceVariant.withValues(alpha: 0.7),
+        Flexible(
+          child: Text(
+            text,
+            style: manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: DC.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
           ),
         ),
       ],

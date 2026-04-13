@@ -2,28 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-// ── Dummy data ────────────────────────────────────────────────────────────────
-
-class _TopItem {
-  final String category;
-  final String name;
-  final String soldCount;
-
-  const _TopItem({
-    required this.category,
-    required this.name,
-    required this.soldCount,
-  });
-}
-
-const _kTopItems = <_TopItem>[
-  _TopItem(category: 'Coffee', name: 'Oat Latte', soldCount: '422 Sold'),
-  _TopItem(category: 'Pastry', name: 'Pain au Choc', soldCount: '184 Sold'),
-];
-
-// ── Widget ────────────────────────────────────────────────────────────────────
-
-/// "Top Selling Items" card — mirrors the right half of the bottom section.
+/// `<div class="bg-surface-container-lowest rounded-xl p-8 shadow-[...]">`
 class TopSellingCard extends StatelessWidget {
   const TopSellingCard({super.key});
 
@@ -44,10 +23,12 @@ class TopSellingCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header ────────────────────────────────────────────────────────
+          // HTML: flex items-center justify-between mb-6
           Row(
             children: [
+              // HTML: text-sm font-extrabold text-[#2d2514] uppercase tracking-wider
               Expanded(
                 child: Text(
                   'TOP SELLING ITEMS',
@@ -59,6 +40,7 @@ class TopSellingCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // HTML: text-xs text-on-surface-variant font-medium
               Text(
                 'This Week',
                 style: manrope(
@@ -69,22 +51,27 @@ class TopSellingCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ── Item grid (2 columns) ─────────────────────────────────────────
+          // HTML: flex gap-4
           Row(
-            children: _kTopItems
-                .map(
-                  (item) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: item == _kTopItems.last ? 0 : 16,
-                      ),
-                      child: _TopItemTile(item: item),
-                    ),
-                  ),
-                )
-                .toList(),
+            children: const [
+              Expanded(
+                child: _ItemTile(
+                  category: 'Coffee',
+                  name: 'Oat Latte',
+                  sold: '422 Sold',
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: _ItemTile(
+                  category: 'Pastry',
+                  name: 'Pain au Choc',
+                  sold: '184 Sold',
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -92,14 +79,21 @@ class TopSellingCard extends StatelessWidget {
   }
 }
 
-class _TopItemTile extends StatelessWidget {
-  final _TopItem item;
+class _ItemTile extends StatelessWidget {
+  final String category;
+  final String name;
+  final String sold;
 
-  const _TopItemTile({required this.item});
+  const _ItemTile({
+    required this.category,
+    required this.name,
+    required this.sold,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      // HTML: flex-1 p-4 rounded-xl bg-surface-container-low
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: DC.surfaceContainerLow,
@@ -108,18 +102,20 @@ class _TopItemTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // HTML: text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-tighter mb-1
           Text(
-            item.category.toUpperCase(),
+            category.toUpperCase(),
             style: manrope(
               fontSize: 9,
               fontWeight: FontWeight.w700,
-              letterSpacing: 1.0,
+              letterSpacing: 0.8,
               color: DC.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 4),
+          // HTML: text-lg font-bold text-[#2d2514]
           Text(
-            item.name,
+            name,
             style: manrope(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -127,8 +123,9 @@ class _TopItemTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
+          // HTML: text-xs font-medium text-tertiary
           Text(
-            item.soldCount,
+            sold,
             style: manrope(
               fontSize: 12,
               fontWeight: FontWeight.w500,

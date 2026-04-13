@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-/// Which nav item is currently active.
 enum NavItem { dashboard, products, categories, settings }
 
-/// Fixed-width (256 dp) navigation drawer — mirrors the HTML `<aside>`.
+/// Fixed 256-dp sidebar — mirrors the HTML `<aside class="w-64 fixed ...">`.
 ///
-/// On narrow screens (< 1024 dp) this is wrapped in a Flutter [Drawer];
-/// on wide screens it sits inline in the [Row] layout.
+/// Background: stone-100 (#F5F5F4)
+/// Active item: white card with subtle shadow
+/// Inactive items: stone-500 text, hover stone-200/50
 class SidebarWidget extends StatelessWidget {
   final NavItem selected;
   final ValueChanged<NavItem> onSelected;
@@ -28,9 +28,10 @@ class SidebarWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Brand logo ─────────────────────────────────────────────────────
+          // ── BARISTA POS brand ──────────────────────────────────────────────
+          // HTML: px-6 py-8 text-lg font-black uppercase tracking-tighter
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 36, 24, 36),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
             child: Text(
               'BARISTA POS',
               style: manrope(
@@ -42,7 +43,8 @@ class SidebarWidget extends StatelessWidget {
             ),
           ),
 
-          // ── Primary nav ────────────────────────────────────────────────────
+          // ── Primary nav items ──────────────────────────────────────────────
+          // HTML: flex-1 space-y-1
           _NavTile(
             icon: Icons.dashboard_outlined,
             activeIcon: Icons.dashboard_rounded,
@@ -67,7 +69,7 @@ class SidebarWidget extends StatelessWidget {
 
           const Spacer(),
 
-          // ── Bottom nav ─────────────────────────────────────────────────────
+          // ── Settings pinned at bottom (HTML: mt-auto) ──────────────────────
           _NavTile(
             icon: Icons.settings_outlined,
             activeIcon: Icons.settings_rounded,
@@ -75,14 +77,15 @@ class SidebarWidget extends StatelessWidget {
             selected: selected == NavItem.settings,
             onTap: () => onSelected(NavItem.settings),
           ),
-          const SizedBox(height: 20),
+          // HTML: py-6 bottom padding
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
 }
 
-class _NavTile extends StatelessWidget {
+class _NavTile extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -98,47 +101,63 @@ class _NavTile extends StatelessWidget {
   });
 
   @override
+  State<_NavTile> createState() => _NavTileState();
+}
+
+class _NavTileState extends State<_NavTile> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
+      // HTML: mx-4 (horizontal margin 16)
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: Material(
-        color: selected ? Colors.white : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          hoverColor: DC.stone200.withValues(alpha: 0.5),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
+            duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            // HTML: px-4 py-3
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
+              // Active: bg-white shadow-sm | Hover inactive: bg-stone-200/50
+              color: widget.selected
+                  ? Colors.white
+                  : _hovered
+                      ? DC.stone200.withValues(alpha: 0.5)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: selected
+              boxShadow: widget.selected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1),
                       ),
                     ]
                   : null,
             ),
             child: Row(
               children: [
+                // HTML: gap-3
                 Icon(
-                  selected ? activeIcon : icon,
-                  size: 20,
-                  color: selected ? DC.stone900 : DC.stone500,
+                  widget.selected ? widget.activeIcon : widget.icon,
+                  size: 22,
+                  color: widget.selected ? DC.stone900 : DC.stone500,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  label,
+                  widget.label,
                   style: manrope(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.9,
-                    color: selected ? DC.stone900 : DC.stone500,
+                    // HTML: text-sm font-medium tracking-wide uppercase
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: widget.selected ? DC.stone900 : DC.stone500,
                   ),
                 ),
               ],

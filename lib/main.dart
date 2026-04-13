@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
-import 'screens/home_shell.dart';
+import 'features/dashboard/presentation/pages/home_dashboard_page.dart';
 import 'services/storage_service.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
@@ -23,10 +23,10 @@ class BorderPoApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppState(storage),
       child: MaterialApp(
-        title: 'Border PO',
+        title: 'Barista POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
-        home: const HomeShell(),
+        home: const HomeDashboardPage(),
       ),
     );
   }

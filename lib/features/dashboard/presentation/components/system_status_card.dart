@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-/// Dark "System Health" card — mirrors the `bg-stone-900` div in the HTML.
+/// `<div class="bg-stone-900 rounded-xl p-8 text-white flex items-center gap-8 relative overflow-hidden">`
 ///
-/// Uses a pulsing dot animation for each status indicator, matching the
-/// Tailwind `animate-pulse` class.
+/// Dark card with pulsing status dots and a decorative glow in the top-right.
 class SystemStatusCard extends StatelessWidget {
   const SystemStatusCard({super.key});
 
@@ -14,26 +13,27 @@ class SystemStatusCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        // HTML: p-8
         padding: const EdgeInsets.all(32),
         color: DC.stone900,
         child: Stack(
-          clipBehavior: Clip.none,
           children: [
-            // Decorative background glow (top-right)
+            // ── Decorative glow — HTML: absolute top-0 right-0 w-64 h-64
+            //    bg-primary-dim/20 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2
             Positioned(
-              top: -64,
-              right: -64,
+              top: -80,
+              right: -80,
               child: Container(
-                width: 220,
-                height: 220,
+                width: 256,
+                height: 256,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: DC.primaryDim.withValues(alpha: 0.18),
+                  color: DC.primaryDim.withValues(alpha: 0.2),
                 ),
               ),
             ),
 
-            // Foreground content
+            // ── Content — HTML: flex items-center gap-8
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -41,9 +41,11 @@ class SystemStatusCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // HTML: text-xs font-bold text-primary-fixed-dim uppercase tracking-widest mb-2
                       Text(
-                        'SYSTEM HEALTH',
+                        'System Health',
                         style: manrope(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -51,9 +53,10 @@ class SystemStatusCard extends StatelessWidget {
                           color: DC.primaryFixedDim,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
+                      // HTML: text-2xl font-bold mb-4
                       Text(
-                        'Store connectivity\nis excellent',
+                        'Store connectivity is excellent',
                         style: manrope(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -61,18 +64,25 @@ class SystemStatusCard extends StatelessWidget {
                           height: 1.35,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      const _PulsingStatus(label: 'Main Server: Active'),
-                      const SizedBox(height: 10),
-                      const _PulsingStatus(label: 'Payment Gateway: Online'),
+                      const SizedBox(height: 16),
+                      // HTML: flex items-center gap-6
+                      Wrap(
+                        spacing: 24,
+                        runSpacing: 8,
+                        children: const [
+                          _PulsingDot(label: 'Main Server: Active'),
+                          _PulsingDot(label: 'Payment Gateway: Online'),
+                        ],
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 32),
 
-                // Hub icon in frosted circle
+                // Hub icon circle
+                // HTML: p-6 rounded-full bg-white/5 backdrop-blur-xl border border-white/10
                 Container(
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withValues(alpha: 0.05),
@@ -80,7 +90,7 @@ class SystemStatusCard extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.hub_rounded,
                     size: 40,
                     color: DC.primaryFixedDim,
@@ -97,19 +107,18 @@ class SystemStatusCard extends StatelessWidget {
 
 // ── Pulsing status indicator ──────────────────────────────────────────────────
 
-class _PulsingStatus extends StatefulWidget {
+class _PulsingDot extends StatefulWidget {
   final String label;
-
-  const _PulsingStatus({required this.label});
+  const _PulsingDot({required this.label});
 
   @override
-  State<_PulsingStatus> createState() => _PulsingStatusState();
+  State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingStatusState extends State<_PulsingStatus>
+class _PulsingDotState extends State<_PulsingDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _fade;
+  late final Animation<double> _anim;
 
   @override
   void initState() {
@@ -118,7 +127,7 @@ class _PulsingStatusState extends State<_PulsingStatus>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
   @override
@@ -130,9 +139,11 @@ class _PulsingStatusState extends State<_PulsingStatus>
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
+        // HTML: w-2 h-2 rounded-full bg-tertiary animate-pulse
         FadeTransition(
-          opacity: _fade,
+          opacity: _anim,
           child: Container(
             width: 8,
             height: 8,
@@ -143,6 +154,7 @@ class _PulsingStatusState extends State<_PulsingStatus>
           ),
         ),
         const SizedBox(width: 8),
+        // HTML: text-xs font-medium text-stone-400
         Text(
           widget.label,
           style: manrope(

@@ -2,61 +2,54 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-// ── Dummy data model ──────────────────────────────────────────────────────────
+// ── Dummy data ────────────────────────────────────────────────────────────────
 
-class _TxItem {
+class _Tx {
   final String name;
-  final String orderId;
-  final String time;
+  final String meta; // "#4092 • 2:45 PM"
   final String amount;
-  final bool isPaid; // false = Refund
+  final bool isPaid;
   final String imageUrl;
 
-  const _TxItem({
+  const _Tx({
     required this.name,
-    required this.orderId,
-    required this.time,
+    required this.meta,
     required this.amount,
     required this.isPaid,
     required this.imageUrl,
   });
 }
 
-const _kTransactions = <_TxItem>[
-  _TxItem(
+const _kTx = <_Tx>[
+  _Tx(
     name: 'Flat White + Oat',
-    orderId: '#4092',
-    time: '2:45 PM',
+    meta: '#4092 • 2:45 PM',
     amount: '\$5.50',
     isPaid: true,
     imageUrl:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuACsHZ1bakS1glU62jrYz1dZQAlgRyZfXNWQC6PbqoHjC5lYOtzblCr81MYVr8uUwn03Z5cguCAMW9p7aB0gisIx5GP2RQ5Muytlh4BSSr5Ws-n3teKKBBCdbQCzGFVwQH2VgTW6DHRb6-CBNOmDfymi_od0eeI0h_cJlVYD5GzD7Aq-u-sd9uxyxgusXPXLz8lo3y72_kTxLIPABjlODDsy2pIl0nF2-rrSTfgpClbD7sSrDLaClDBrF1IFaYuNJcIoR4QJHdgZ7FD',
   ),
-  _TxItem(
+  _Tx(
     name: 'Almond Croissant',
-    orderId: '#4091',
-    time: '2:32 PM',
+    meta: '#4091 • 2:32 PM',
     amount: '\$4.25',
     isPaid: true,
     imageUrl:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuAjKCP5y3zJTDjAwR0nptJjEjnYpQIaEZpHEAHVMhseGXFsUylKz30o0R8pVG58F3oz97-y7EdX_Qw9_oV0bQc0EyIopfftSdwtz8_Q1Pm2S62F-9Yn5I4SluvdKmijPSPnK_H3g16Qip652f75PGc1jrKsF159ADUL_B2p-6FWwFiLN5_fasE84e-UjtELxPdc7q-7jESQdSG2fpt1gj5QQkv4l5Vb_Ek-aZ0-BrfkhBT41Pa0LCbRa-CVe2zE2hafJeaCpu3A6xwD',
   ),
-  _TxItem(
+  _Tx(
     name: 'Double Espresso',
-    orderId: '#4090',
-    time: '2:15 PM',
+    meta: '#4090 • 2:15 PM',
     amount: '\$3.50',
-    isPaid: false,
+    isPaid: false, // Refund — HTML: opacity-70
     imageUrl:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuBM61ehyB56TZSBBsCLKDInahN2pVVzq-GHpuvwdXwIOdw3iLisLNCfmWrU4GERXbEz057CNiFfX-8ab4bv_EMUr4NoBya2-f0YX_mxLRd9qf15CsF58fMXWJh4rupONDY89mrJbvsraWMwNFvDaDedUKR2H0SR8fgQflc_sUK7a2MJuUhDMf3GosMOu5Y3v4uKAigjFwfOL9091UlHGfK4smUk6DlAptSqxwSf3vgaNNJYGQwI2LDKc0kYAPInwTWufVyAYqwN9eIZ',
   ),
 ];
 
-// ── Main widget ───────────────────────────────────────────────────────────────
+// ── Widget ────────────────────────────────────────────────────────────────────
 
-/// Recent Sales panel — mirrors the `lg:col-span-1` section in the HTML.
-///
-/// Contains a scrollable transaction list and a "Create New Order" CTA button.
+/// `<div class="bg-surface-container-lowest p-8 rounded-xl ... flex flex-col">`
 class RecentTransactionsWidget extends StatelessWidget {
   const RecentTransactionsWidget({super.key});
 
@@ -77,8 +70,9 @@ class RecentTransactionsWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header ──────────────────────────────────────────────────────────
+          // HTML: flex items-center justify-between mb-8
           Row(
             children: [
               Text(
@@ -90,8 +84,9 @@ class RecentTransactionsWidget extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () {},
+              // HTML: text-sm font-bold text-primary hover:underline
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
                 child: Text(
                   'View All',
                   style: manrope(
@@ -106,31 +101,36 @@ class RecentTransactionsWidget extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
-          // ── Transaction list ─────────────────────────────────────────────────
-          ..._kTransactions
-              .map((tx) => _TransactionRow(item: tx))
-              .toList(),
+          // HTML: space-y-6
+          ..._kTx.map(
+            (tx) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _TxRow(tx: tx),
+            ),
+          ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 8),
 
-          // ── CTA button ───────────────────────────────────────────────────────
+          // CTA — HTML: mt-8 w-full py-4 bg-primary text-on-primary rounded-xl font-bold
           SizedBox(
             width: double.infinity,
-            height: 52,
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: DC.primary,
                 foregroundColor: DC.onPrimary,
                 elevation: 0,
+                shadowColor: DC.primary.withValues(alpha: 0.2),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 textStyle: manrope(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
                 ),
               ),
               child: const Text('Create New Order'),
@@ -142,88 +142,84 @@ class RecentTransactionsWidget extends StatelessWidget {
   }
 }
 
-// ── Row widget ────────────────────────────────────────────────────────────────
+// ── Transaction row ───────────────────────────────────────────────────────────
 
-class _TransactionRow extends StatelessWidget {
-  final _TxItem item;
-
-  const _TransactionRow({required this.item});
+class _TxRow extends StatelessWidget {
+  final _Tx tx;
+  const _TxRow({required this.tx});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Opacity(
-        // Refund items appear slightly faded, matching the HTML `opacity-70`
-        opacity: item.isPaid ? 1.0 : 0.7,
-        child: Row(
-          children: [
-            // Product thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                item.imageUrl,
+    // HTML: opacity-70 on refund item
+    return Opacity(
+      opacity: tx.isPaid ? 1.0 : 0.7,
+      child: Row(
+        children: [
+          // HTML: w-12 h-12 rounded-xl bg-surface-container-low overflow-hidden
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              tx.imageUrl,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
                 width: 48,
                 height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 48,
-                  height: 48,
-                  color: DC.surfaceContainerLow,
-                  child: Icon(
-                    Icons.coffee_outlined,
-                    color: DC.onSurfaceVariant,
-                    size: 22,
-                  ),
-                ),
+                color: DC.surfaceContainerLow,
+                child: Icon(Icons.coffee_outlined,
+                    color: DC.onSurfaceVariant, size: 22),
               ),
             ),
-            const SizedBox(width: 16),
+          ),
+          const SizedBox(width: 16),
 
-            // Name + order meta
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: manrope(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: DC.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${item.orderId} • ${item.time}',
-                    style: manrope(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: DC.onSurfaceVariant.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Amount + status badge
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          // Name + meta
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // HTML: text-sm font-bold text-on-surface
                 Text(
-                  item.amount,
+                  tx.name,
                   style: manrope(
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: DC.deepBrown,
+                    fontWeight: FontWeight.w700,
+                    color: DC.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
-                _StatusBadge(isPaid: item.isPaid),
+                const SizedBox(height: 2),
+                // HTML: text-[11px] font-medium text-on-surface-variant/60
+                Text(
+                  tx.meta,
+                  style: manrope(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: DC.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+
+          // Amount + badge
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // HTML: text-sm font-extrabold text-[#2d2514]
+              Text(
+                tx.amount,
+                style: manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: DC.deepBrown,
+                ),
+              ),
+              const SizedBox(height: 4),
+              _StatusBadge(isPaid: tx.isPaid),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -231,26 +227,26 @@ class _TransactionRow extends StatelessWidget {
 
 class _StatusBadge extends StatelessWidget {
   final bool isPaid;
-
   const _StatusBadge({required this.isPaid});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
+        // Paid: bg-tertiary-container | Refund: bg-surface-container-high
         color: isPaid ? DC.tertiaryContainer : DC.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        isPaid ? 'PAID' : 'REFUND',
+        isPaid ? 'Paid' : 'Refund',
         style: manrope(
           fontSize: 9,
           fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
+          letterSpacing: 0.4,
           color: isPaid
               ? DC.tertiary
-              : DC.onSurfaceVariant.withValues(alpha: 0.45),
+              : DC.onSurfaceVariant.withValues(alpha: 0.4),
         ),
       ),
     );
