@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/category.dart';
+import '../models/ingredient.dart';
 import '../models/product.dart';
 import '../models/store_profile.dart';
 import '../models/transaction.dart';
@@ -12,6 +13,7 @@ import '../models/transaction.dart';
 /// Each entity collection is stored as a JSON-encoded list under a stable key.
 /// Designed to be small, simple and offline-first — no DB engine required.
 class StorageService {
+  static const _kIngredients = 'border_po.ingredients';
   static const _kProducts = 'border_po.products';
   static const _kCategories = 'border_po.categories';
   static const _kTransactions = 'border_po.transactions';
@@ -24,6 +26,22 @@ class StorageService {
   static Future<StorageService> init() async {
     final prefs = await SharedPreferences.getInstance();
     return StorageService._(prefs);
+  }
+
+  // ---------------- Ingredients ----------------
+
+  List<Ingredient> loadIngredients() {
+    final raw = _prefs.getString(_kIngredients);
+    if (raw == null || raw.isEmpty) return <Ingredient>[];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list
+        .map((e) => Ingredient.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveIngredients(List<Ingredient> ingredients) async {
+    final raw = jsonEncode(ingredients.map((e) => e.toJson()).toList());
+    await _prefs.setString(_kIngredients, raw);
   }
 
   // ---------------- Products ----------------
@@ -81,6 +99,7 @@ class StorageService {
   }
 
   Future<void> clearAll() async {
+    await _prefs.remove(_kIngredients);
     await _prefs.remove(_kProducts);
     await _prefs.remove(_kCategories);
     await _prefs.remove(_kTransactions);

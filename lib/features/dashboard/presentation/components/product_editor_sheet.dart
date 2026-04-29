@@ -9,6 +9,8 @@ import 'package:border_po/models/category.dart';
 import 'package:border_po/state/app_state.dart';
 import '../theme/dashboard_colors.dart';
 
+import 'package:border_po/models/ingredient.dart';
+
 /// Form dialog (bottom sheet) for adding and editing products.
 /// Moved out of product_management_body.dart so it can be called
 /// globally (e.g. from the dashboard FAB).
@@ -20,8 +22,15 @@ class ProductEditorSheet {
     final priceCtrl = TextEditingController(
       text: existing != null ? existing.price.toString() : '',
     );
+    final manualCostCtrl = TextEditingController(
+      text: existing?.manualCost != null ? existing!.manualCost.toString() : '',
+    );
+    
     String? selectedCategoryId = existing?.categoryId;
     String? currentImageBase64 = existing?.imageBase64;
+    
+    // Copy the recipe so we can edit it locally
+    List<RecipeItem> currentRecipe = List.from(existing?.recipe ?? []);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -50,6 +59,77 @@ class ProductEditorSheet {
                   currentImageBase64 = b64;
                 });
               }
+            }
+
+            void addRecipeItem() async {
+              if (state.ingredients.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Belum ada data bahan baku.')));
+                return;
+              }
+              
+              String? selectedIngId = state.ingredients.first.id;
+              final qtyCtrl = TextEditingController(text: '1');
+              
+              final result = await showDialog<RecipeItem>(
+                context: ctx,
+                builder: (dCtx) => StatefulBuilder(
+                  builder: (dCtx, setDialog) => AlertDialog(
+                    backgroundColor: DC.surfaceContainerLowest,
+                    title: const Text('Tambah Bahan'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: selectedIngId,
+                          decoration: InputDecoration(
+                            labelText: 'Bahan Baku',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          items: state.ingredients.map((ing) => DropdownMenuItem(
+                            value: ing.id,
+                            child: Text('${ing.name} (${ing.unit})'),
+                          )).toList(),
+                          onChanged: (v) => setDialog(() => selectedIngId = v),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: qtyCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Kuantitas',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        )
+                      ],
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(dCtx).pop(), child: const Text('Batal')),
+                      FilledButton(
+                        onPressed: () {
+                          final qty = int.tryParse(qtyCtrl.text) ?? 1;
+                          if (selectedIngId != null) {
+                            Navigator.of(dCtx).pop(RecipeItem(ingredientId: selectedIngId!, quantity: qty));
+                          }
+                        },
+                        child: const Text('Tambah'),
+                      ),
+                    ],
+                  ),
+                )
+              );
+              
+              if (result != null) {
+                setSheet(() {
+                  currentRecipe.add(result);
+                });
+              }
+            }
+
+            // Calculate auto cost
+            int autoCost = 0;
+            for(final item in currentRecipe) {
+               final ing = state.ingredients.where((i) => i.id == item.ingredientId).firstOrNull;
+               if(ing != null) autoCost += (ing.costPerUnit * item.quantity);
             }
 
             return Padding(
@@ -135,14 +215,14 @@ class ProductEditorSheet {
                     // Price field
                     _StyledField(
                       controller: priceCtrl,
-                      label: 'Harga (Rp)',
+                      label: 'Harga Jual (Rp)',
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                       ],
                     ),
                     const SizedBox(height: 16),
-
+                    
                     // Category selector
                     if (state.categories.isEmpty)
                       Container(
@@ -190,12 +270,84 @@ class ProductEditorSheet {
                       ),
                     ],
                     const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    
+                    // Recipe Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                         Text(
+                          'Resep / Bahan Baku',
+                          style: manrope(
+                            fontWeight: FontWeight.w700,
+                            color: DC.onSurface,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: addRecipeItem,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Tambah Bahan'),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    if (currentRecipe.isEmpty)
+                       Text(
+                         'Tidak ada resep. Gunakan modal manual jika diperlukan.',
+                         style: manrope(fontSize: 12, color: DC.onSurfaceVariant),
+                       )
+                    else 
+                       ListView.builder(
+                         shrinkWrap: true,
+                         physics: const NeverScrollableScrollPhysics(),
+                         itemCount: currentRecipe.length,
+                         itemBuilder: (ctx, i) {
+                           final item = currentRecipe[i];
+                           final ing = state.ingredients.where((ig) => ig.id == item.ingredientId).firstOrNull;
+                           return ListTile(
+                             contentPadding: EdgeInsets.zero,
+                             dense: true,
+                             title: Text(ing?.name ?? 'Unknown Ingredient'),
+                             subtitle: Text('${item.quantity} ${ing?.unit ?? ''}  (@ Rp${ing?.costPerUnit ?? 0})'),
+                             trailing: IconButton(
+                               icon: const Icon(Icons.delete_outline, color: DC.error),
+                               onPressed: () => setSheet(() => currentRecipe.removeAt(i)),
+                             ),
+                           );
+                         },
+                       ),
+                       
+                    const SizedBox(height: 16),
+                    if (currentRecipe.isEmpty)
+                      _StyledField(
+                        controller: manualCostCtrl,
+                        label: 'Modal Manual (Rp) - Opsional',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: DC.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                        child: Text(
+                          'Total Modal Otomatis: Rp $autoCost',
+                          style: manrope(fontWeight: FontWeight.w700, color: DC.onPrimaryContainer),
+                        ),
+                      ),
+
+                    const SizedBox(height: 24),
 
                     // Submit button
                     GestureDetector(
                       onTap: () async {
                         final name = nameCtrl.text.trim();
                         final price = int.tryParse(priceCtrl.text.trim()) ?? 0;
+                        final mCost = currentRecipe.isEmpty ? (int.tryParse(manualCostCtrl.text.trim()) ?? 0) : null;
+                        
                         if (name.isEmpty || price <= 0) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             SnackBar(
@@ -215,6 +367,8 @@ class ProductEditorSheet {
                             price: price,
                             categoryId: selectedCategoryId,
                             imageBase64: currentImageBase64,
+                            recipe: currentRecipe,
+                            manualCost: mCost,
                           );
                         } else {
                           await state.addProduct(
@@ -222,6 +376,8 @@ class ProductEditorSheet {
                             price: price,
                             categoryId: selectedCategoryId,
                             imageBase64: currentImageBase64,
+                            recipe: currentRecipe,
+                            manualCost: mCost,
                           );
                         }
                         if (ctx.mounted) Navigator.of(ctx).pop();

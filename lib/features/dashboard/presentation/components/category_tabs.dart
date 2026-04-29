@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../models/mock_data.dart';
+import 'package:border_po/models/category.dart';
 
 /// Horizontal pill-shaped category selector.
+///
+/// The first tab is always "Semua" (all). Categories come from [AppState].
 class CategoryTabs extends StatelessWidget {
-  final List<MockCategory> categories;
-  final String selectedCategoryId;
-  final ValueChanged<String> onSelected;
+  final List<ProductCategory> categories;
+  final String? selectedCategoryId;
+  final ValueChanged<String?> onSelected;
 
   const CategoryTabs({
     super.key,
@@ -22,14 +24,22 @@ class CategoryTabs extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        itemCount: categories.length,
+        itemCount: categories.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, i) {
-          final c = categories[i];
-          final selected = c.id == selectedCategoryId;
+          if (i == 0) {
+            return _CategoryPill(
+              name: 'Semua',
+              icon: Icons.apps_rounded,
+              selected: selectedCategoryId == null,
+              onTap: () => onSelected(null),
+            );
+          }
+          final c = categories[i - 1];
           return _CategoryPill(
-            category: c,
-            selected: selected,
+            name: c.name,
+            icon: Icons.category_outlined,
+            selected: c.id == selectedCategoryId,
             onTap: () => onSelected(c.id),
           );
         },
@@ -39,12 +49,14 @@ class CategoryTabs extends StatelessWidget {
 }
 
 class _CategoryPill extends StatelessWidget {
-  final MockCategory category;
+  final String name;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
   const _CategoryPill({
-    required this.category,
+    required this.name,
+    required this.icon,
     required this.selected,
     required this.onTap,
   });
@@ -83,14 +95,10 @@ class _CategoryPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                category.icon,
-                size: 18,
-                color: selected ? Colors.white : scheme.onSurface,
-              ),
+              Icon(icon, size: 18, color: selected ? Colors.white : scheme.onSurface),
               const SizedBox(width: 8),
               Text(
-                category.name,
+                name,
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: selected ? Colors.white : scheme.onSurface,

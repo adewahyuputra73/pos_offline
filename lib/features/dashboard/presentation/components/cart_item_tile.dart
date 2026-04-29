@@ -1,13 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
-import '../models/mock_data.dart';
+import 'package:border_po/state/app_state.dart';
+import 'package:border_po/utils/formatters.dart';
 
 /// One row in the active-order list.
 ///
-/// Shows product icon, name, unit price, and a +/- quantity stepper.
+/// Shows product image/icon, name, unit price, and a +/- quantity stepper.
 /// Decrementing to 0 is handled by the parent (it removes the item).
 class CartItemTile extends StatelessWidget {
-  final MockCartLine line;
+  final CartLine line;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
 
@@ -41,19 +43,26 @@ class CartItemTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Product icon chip
+          // Product image or icon
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: line.product.accent.withValues(alpha: 0.15),
+              color: scheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              line.product.icon,
-              color: line.product.accent,
-              size: 22,
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: line.product.imageBase64 != null &&
+                    line.product.imageBase64!.isNotEmpty
+                ? Image.memory(
+                    base64Decode(line.product.imageBase64!),
+                    fit: BoxFit.cover,
+                  )
+                : Icon(
+                    Icons.inventory_2_outlined,
+                    color: scheme.primary,
+                    size: 22,
+                  ),
           ),
           const SizedBox(width: 12),
 

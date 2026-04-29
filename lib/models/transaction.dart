@@ -48,6 +48,7 @@ class TransactionRecord {
   final String id;
   final List<TransactionItem> items;
   final int total;
+  final int cogs; // Cost of Goods Sold (Modal)
   final PaymentMethod paymentMethod;
   final int? paidAmount; // for cash
   final int? change; // for cash
@@ -58,6 +59,7 @@ class TransactionRecord {
     required this.id,
     required this.items,
     required this.total,
+    required this.cogs,
     required this.paymentMethod,
     required this.createdAt,
     this.paidAmount,
@@ -65,10 +67,13 @@ class TransactionRecord {
     this.qrisImageBase64,
   });
 
+  int get profit => total - cogs;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'items': items.map((e) => e.toJson()).toList(),
         'total': total,
+        'cogs': cogs,
         'paymentMethod': paymentMethodToString(paymentMethod),
         'paidAmount': paidAmount,
         'change': change,
@@ -83,6 +88,7 @@ class TransactionRecord {
             .map((e) => TransactionItem.fromJson(e as Map<String, dynamic>))
             .toList(),
         total: (json['total'] as num).toInt(),
+        cogs: (json['cogs'] as num?)?.toInt() ?? 0, // Default to 0 for older records
         paymentMethod:
             paymentMethodFromString(json['paymentMethod'] as String),
         paidAmount: (json['paidAmount'] as num?)?.toInt(),

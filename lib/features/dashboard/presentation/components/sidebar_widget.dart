@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-enum NavItem { dashboard, orders, settings }
+enum NavItem { dashboard, orders, inventory, settings }
 
 /// Fixed 256-dp sidebar — mirrors the HTML `<aside class="w-64 fixed ...">`.
 ///
@@ -56,6 +56,13 @@ class SidebarWidget extends StatelessWidget {
             label: 'ORDERS',
             selected: selected == NavItem.orders,
             onTap: () => onSelected(NavItem.orders),
+          ),
+          _NavTile(
+            icon: Icons.kitchen_outlined,
+            activeIcon: Icons.kitchen_rounded,
+            label: 'BAHAN BAKU',
+            selected: selected == NavItem.inventory,
+            onTap: () => onSelected(NavItem.inventory),
           ),
 
           const Spacer(),

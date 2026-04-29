@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:border_po/state/app_state.dart';
 import '../theme/dashboard_colors.dart';
 
-/// `<div class="bg-stone-900 rounded-xl p-8 text-white flex items-center gap-8 relative overflow-hidden">`
+/// Local storage status card — shows counts of stored data.
 ///
-/// Dark card with pulsing status dots and a decorative glow in the top-right.
+/// Replaces the old server-connectivity card with relevant offline-mode info.
 class SystemStatusCard extends StatelessWidget {
   const SystemStatusCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool compact = constraints.maxWidth < 360;
@@ -34,7 +38,6 @@ class SystemStatusCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -44,7 +47,7 @@ class SystemStatusCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'System Health',
+                            'PENYIMPANAN LOKAL',
                             style: manrope(
                               fontSize: compact ? 9 : 10,
                               fontWeight: FontWeight.w700,
@@ -54,7 +57,7 @@ class SystemStatusCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Store connectivity is excellent',
+                            'Mode Offline — Aktif',
                             style: manrope(
                               fontSize: compact ? 16 : 22,
                               fontWeight: FontWeight.w700,
@@ -63,12 +66,14 @@ class SystemStatusCard extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: compact ? 10 : 16),
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _PulsingDot(label: 'Main Server: Active'),
-                              SizedBox(height: 8),
-                              _PulsingDot(label: 'Payment Gateway: Online'),
+                              _StatusDot(label: '${state.products.length} Produk tersimpan'),
+                              const SizedBox(height: 8),
+                              _StatusDot(label: '${state.categories.length} Kategori tersimpan'),
+                              const SizedBox(height: 8),
+                              _StatusDot(label: '${state.transactions.length} Transaksi tercatat'),
                             ],
                           ),
                         ],
@@ -86,7 +91,7 @@ class SystemStatusCard extends StatelessWidget {
                           ),
                         ),
                         child: Icon(
-                          Icons.hub_rounded,
+                          Icons.smartphone_rounded,
                           size: 28,
                           color: DC.primaryFixedDim,
                         ),
@@ -103,17 +108,15 @@ class SystemStatusCard extends StatelessWidget {
   }
 }
 
-// ── Pulsing status indicator ──────────────────────────────────────────────────
-
-class _PulsingDot extends StatefulWidget {
+class _StatusDot extends StatefulWidget {
   final String label;
-  const _PulsingDot({required this.label});
+  const _StatusDot({required this.label});
 
   @override
-  State<_PulsingDot> createState() => _PulsingDotState();
+  State<_StatusDot> createState() => _StatusDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot>
+class _StatusDotState extends State<_StatusDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
@@ -139,7 +142,6 @@ class _PulsingDotState extends State<_PulsingDot>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // HTML: w-2 h-2 rounded-full bg-tertiary animate-pulse
         FadeTransition(
           opacity: _anim,
           child: Container(
@@ -152,7 +154,6 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         ),
         const SizedBox(width: 8),
-        // HTML: text-xs font-medium text-stone-400
         Flexible(
           child: Text(
             widget.label,

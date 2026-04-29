@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
+import 'package:border_po/state/app_state.dart';
+import 'package:border_po/utils/formatters.dart';
 import '../theme/dashboard_colors.dart';
 
-/// Sales Performance section — `<div class="lg:col-span-2 bg-surface-container-lowest p-8 rounded-xl">`.
+/// Sales Performance chart — reads real transaction data from [AppState].
 ///
-/// Bar heights and colors match exactly the HTML source:
-///   Mon 60%, Tue 45%, Wed 85%, Thu 70%, Fri 95% (primary/40), Sat 50%, Sun 30% (primary-container)
+/// Supports toggling between revenue-per-day and transaction-count-per-day
+/// for the last 7 days.
 class SalesChartWidget extends StatefulWidget {
   const SalesChartWidget({super.key});
 
@@ -14,37 +18,17 @@ class SalesChartWidget extends StatefulWidget {
 }
 
 class _SalesChartWidgetState extends State<SalesChartWidget> {
-  String _period = 'WEEKLY';
-
-  /// HTML bar definitions — ratio = percentage height from the HTML classes.
-  static const _weeklyBars = <_Bar>[
-    _Bar(day: 'MON', ratio: 0.60, label: 'Mon: \$420', style: _BarStyle.normal),
-    _Bar(day: 'TUE', ratio: 0.45, label: 'Tue: \$315', style: _BarStyle.normal),
-    _Bar(day: 'WED', ratio: 0.85, label: 'Wed: \$595', style: _BarStyle.normal),
-    _Bar(day: 'THU', ratio: 0.70, label: 'Thu: \$490', style: _BarStyle.normal),
-    // HTML: bg-primary/40 (highlighted, not primary/20)
-    _Bar(day: 'FRI', ratio: 0.95, label: 'Fri: \$665', style: _BarStyle.highlight),
-    _Bar(day: 'SAT', ratio: 0.50, label: 'Sat: \$350', style: _BarStyle.normal),
-    // HTML: bg-primary-container (lightest tone, not primary/20)
-    _Bar(day: 'SUN', ratio: 0.30, label: 'Sun: \$210', style: _BarStyle.container),
-  ];
-
-  static const _monthlyBars = <_Bar>[
-    _Bar(day: 'W1', ratio: 0.55, label: 'Week 1: \$3.1k', style: _BarStyle.normal),
-    _Bar(day: 'W2', ratio: 0.72, label: 'Week 2: \$4.0k', style: _BarStyle.normal),
-    _Bar(day: 'W3', ratio: 0.92, label: 'Week 3: \$5.1k', style: _BarStyle.highlight),
-    _Bar(day: 'W4', ratio: 0.65, label: 'Week 4: \$3.6k', style: _BarStyle.normal),
-  ];
-
-  List<_Bar> get _bars => _period == 'WEEKLY' ? _weeklyBars : _monthlyBars;
+  String _mode = 'REVENUE'; // 'REVENUE' or 'TRANSAKSI'
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final bars = _buildBars(state);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool compact = constraints.maxWidth < 400;
         final double pad = compact ? 16 : 32;
-        final double chartHeight = compact ? 180 : 300;
 
         return Container(
           padding: EdgeInsets.all(pad),
@@ -62,106 +46,76 @@ class _SalesChartWidgetState extends State<SalesChartWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header ────────────────────────────────────────────────────
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sales Performance',
-                    style: manrope(
-                      fontSize: compact ? 16 : 20,
-                      fontWeight: FontWeight.w700,
-                      color: DC.deepBrown,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Weekly overview of revenue stream',
-                    style: manrope(
-                      fontSize: compact ? 11 : 13,
-                      color: DC.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Period toggle buttons — always in a row, compact sizing
-                  Row(
-                    children: ['WEEKLY', 'MONTHLY'].map((p) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _PeriodBtn(
-                          label: p,
-                          selected: p == _period,
-                          onTap: () => setState(() => _period = p),
-                          compact: compact,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+              Text(
+                'Performa Penjualan',
+                style: manrope(fontSize: compact ? 16 : 20, fontWeight: FontWeight.w700, color: DC.deepBrown),
               ),
-
+              const SizedBox(height: 4),
+              Text(
+                '7 hari terakhir',
+                style: manrope(fontSize: compact ? 11 : 13, color: DC.onSurfaceVariant.withValues(alpha: 0.7)),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: ['REVENUE', 'TRANSAKSI'].map((p) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _PeriodBtn(
+                      label: p == 'REVENUE' ? 'Pendapatan' : 'Jumlah',
+                      selected: p == _mode,
+                      onTap: () => setState(() => _mode = p),
+                      compact: compact,
+                    ),
+                  );
+                }).toList(),
+              ),
               SizedBox(height: compact ? 20 : 40),
-
-              // ── Chart area ────────────────────────────────────────────────
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
+                    if (bars.isEmpty || bars.every((b) => b.value == 0)) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bar_chart_rounded, size: 40, color: DC.onSurfaceVariant.withValues(alpha: 0.3)),
+                            const SizedBox(height: 8),
+                            Text('Belum ada data', style: manrope(fontSize: 13, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
+                          ],
+                        ),
+                      );
+                    }
+                    final maxVal = bars.map((b) => b.value).reduce((a, b) => a > b ? a : b);
                     return Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
                         Positioned.fill(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(
-                              4,
-                              (_) => Divider(
-                                height: 1,
-                                thickness: 1,
-                                color: DC.surfaceContainer,
-                              ),
-                            ),
+                            children: List.generate(4, (_) => Divider(height: 1, thickness: 1, color: DC.surfaceContainer)),
                           ),
                         ),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
                           child: Row(
-                            key: ValueKey(_period),
+                            key: ValueKey(_mode),
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: _bars
-                                .map((b) => _BarWidget(
-                                    bar: b, chartHeight: boxConstraints.maxHeight))
-                                .toList(),
+                            children: bars.map((b) => _BarWidget(bar: b, maxValue: maxVal, chartHeight: boxConstraints.maxHeight, isRevenue: _mode == 'REVENUE')).toList(),
                           ),
                         ),
                       ],
                     );
-                  }
+                  },
                 ),
               ),
-
-              // ── Day labels ────────────────────────────────────────────────
               SizedBox(height: compact ? 12 : 24),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Row(
-                  key: ValueKey('${_period}_labels'),
-                  children: _bars
-                      .map(
-                        (b) => Expanded(
-                          child: Text(
-                            b.day,
-                            textAlign: TextAlign.center,
-                            style: manrope(
-                              fontSize: compact ? 8 : 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: compact ? 0.8 : 1.4,
-                              color:
-                                  DC.onSurfaceVariant.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  key: ValueKey('${_mode}_labels'),
+                  children: bars.map((b) => Expanded(
+                    child: Text(b.day, textAlign: TextAlign.center, style: manrope(fontSize: compact ? 8 : 10, fontWeight: FontWeight.w700, letterSpacing: compact ? 0.8 : 1.4, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
+                  )).toList(),
                 ),
               ),
             ],
@@ -170,29 +124,45 @@ class _SalesChartWidgetState extends State<SalesChartWidget> {
       },
     );
   }
+
+  List<_Bar> _buildBars(AppState state) {
+    final now = DateTime.now();
+    final dayFmt = DateFormat('E', 'id_ID');
+    final bars = <_Bar>[];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = DateTime(now.year, now.month, now.day - i);
+      final dayTxs = state.transactions.where((t) =>
+          t.createdAt.year == date.year &&
+          t.createdAt.month == date.month &&
+          t.createdAt.day == date.day);
+
+      final int revenue = dayTxs.fold(0, (s, t) => s + t.total);
+      final int count = dayTxs.length;
+
+      bars.add(_Bar(
+        day: dayFmt.format(date).toUpperCase(),
+        value: _mode == 'REVENUE' ? revenue.toDouble() : count.toDouble(),
+        label: _mode == 'REVENUE' ? formatRupiah(revenue) : '$count transaksi',
+      ));
+    }
+    return bars;
+  }
 }
-
-// ── Bar data ──────────────────────────────────────────────────────────────────
-
-enum _BarStyle { normal, highlight, container }
 
 class _Bar {
   final String day;
-  final double ratio;
+  final double value;
   final String label;
-  final _BarStyle style;
-  const _Bar({
-    required this.day,
-    required this.ratio,
-    required this.label,
-    required this.style,
-  });
+  const _Bar({required this.day, required this.value, required this.label});
 }
 
 class _BarWidget extends StatefulWidget {
   final _Bar bar;
+  final double maxValue;
   final double chartHeight;
-  const _BarWidget({required this.bar, this.chartHeight = 300});
+  final bool isRevenue;
+  const _BarWidget({required this.bar, required this.maxValue, required this.chartHeight, required this.isRevenue});
 
   @override
   State<_BarWidget> createState() => _BarWidgetState();
@@ -201,26 +171,19 @@ class _BarWidget extends StatefulWidget {
 class _BarWidgetState extends State<_BarWidget> {
   bool _hovered = false;
 
-  Color get _baseColor {
-    if (_hovered) return DC.primary; // HTML: hover:bg-primary
-    switch (widget.bar.style) {
-      case _BarStyle.highlight:
-        return DC.primary.withValues(alpha: 0.4); // bg-primary/40
-      case _BarStyle.container:
-        return DC.primaryContainer; // bg-primary-container
-      case _BarStyle.normal:
-      default:
-        return DC.primary.withValues(alpha: 0.2); // bg-primary/20
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool compact = widget.chartHeight < 250;
-    // Reserve space for tooltip so bars never overflow
     final double tooltipReserve = compact ? 24 : 30;
     final double maxBarHeight = widget.chartHeight - tooltipReserve;
-    final double barHeight = maxBarHeight * widget.bar.ratio;
+    final double ratio = widget.maxValue > 0 ? widget.bar.value / widget.maxValue : 0;
+    final double barHeight = (maxBarHeight * ratio).clamp(4, maxBarHeight);
+
+    final Color barColor = _hovered
+        ? DC.primary
+        : ratio > 0.8
+            ? DC.primary.withValues(alpha: 0.4)
+            : DC.primary.withValues(alpha: 0.2);
 
     return Expanded(
       child: MouseRegion(
@@ -232,7 +195,6 @@ class _BarWidgetState extends State<_BarWidget> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // Tooltip — fixed height reserve so it doesn't push bars out
               SizedBox(
                 height: tooltipReserve,
                 child: AnimatedOpacity(
@@ -242,36 +204,19 @@ class _BarWidgetState extends State<_BarWidget> {
                     alignment: Alignment.bottomCenter,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 2),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: compact ? 4 : 8,
-                        vertical: compact ? 2 : 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: DC.onSurface,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        widget.bar.label,
-                        style: manrope(
-                          fontSize: compact ? 8 : 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 8, vertical: compact ? 2 : 4),
+                      decoration: BoxDecoration(color: DC.onSurface, borderRadius: BorderRadius.circular(4)),
+                      child: Text(widget.bar.label, style: manrope(fontSize: compact ? 8 : 10, fontWeight: FontWeight.w600, color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
                     ),
                   ),
                 ),
               ),
-              // The bar
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                height: barHeight,
+                height: widget.bar.value > 0 ? barHeight : 4,
                 decoration: BoxDecoration(
-                  color: _baseColor,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(6)),
+                  color: widget.bar.value > 0 ? barColor : DC.primaryContainer,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                 ),
               ),
             ],
@@ -282,20 +227,13 @@ class _BarWidgetState extends State<_BarWidget> {
   }
 }
 
-// ── Period toggle button ──────────────────────────────────────────────────────
-
 class _PeriodBtn extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final bool compact;
 
-  const _PeriodBtn({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.compact = false,
-  });
+  const _PeriodBtn({required this.label, required this.selected, required this.onTap, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -306,20 +244,8 @@ class _PeriodBtn extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 16,
-            vertical: compact ? 6 : 8,
-          ),
-          child: Text(
-            label,
-            style: manrope(
-              fontSize: compact ? 9 : 11,
-              fontWeight: FontWeight.w700,
-              color: selected
-                  ? DC.onSurface
-                  : DC.onSurfaceVariant.withValues(alpha: 0.6),
-            ),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: compact ? 6 : 8),
+          child: Text(label, style: manrope(fontSize: compact ? 9 : 11, fontWeight: FontWeight.w700, color: selected ? DC.onSurface : DC.onSurfaceVariant.withValues(alpha: 0.6))),
         ),
       ),
     );

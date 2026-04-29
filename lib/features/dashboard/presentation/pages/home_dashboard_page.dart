@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:border_po/state/app_state.dart';
+import 'package:border_po/utils/formatters.dart';
 import '../components/recent_transactions_widget.dart';
 import '../components/sales_chart_widget.dart';
 import '../components/sidebar_widget.dart';
@@ -9,16 +12,15 @@ import '../components/top_bar_widget.dart';
 import '../components/top_selling_card.dart';
 import '../components/settings_body.dart';
 import '../components/checkout_body.dart';
+import '../components/ingredient_management_body.dart';
 import '../theme/dashboard_colors.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// HomeDashboardPage — pixel-faithful Flutter conversion of the Stitch HTML.
+/// HomeDashboardPage — main entry for the dashboard.
 ///
 /// LAYOUT:
 ///   Always renders a sidebar (w=256) + scrollable main content in a Row.
 ///   On narrow screens the sidebar becomes a Drawer accessed via a hamburger.
-///   The breakpoint (720dp) is deliberately low to match the Stitch desktop feel
-///   on most Android tablets running landscape.
 /// ─────────────────────────────────────────────────────────────────────────────
 class HomeDashboardPage extends StatefulWidget {
   const HomeDashboardPage({super.key});
@@ -113,6 +115,23 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                   onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
         );
+      case NavItem.inventory:
+        return Column(
+          children: [
+            if (!showPermanentSidebar)
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  ),
+                ),
+              ),
+            const Expanded(child: IngredientManagementBody()),
+          ],
+        );
       case NavItem.settings:
         return SettingsBody(
           leading: showPermanentSidebar
@@ -196,18 +215,19 @@ class _DashboardBody extends StatelessWidget {
   }
 }
 
-// ── Section 1: 3 bento summary cards ─────────────────────────────────────────
+// ── Section 1: 3 bento summary cards — real data from AppState ───────────────
 
 class _SummarySection extends StatelessWidget {
   const _SummarySection();
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+
     return LayoutBuilder(
       builder: (ctx, c) {
-        final cards = _buildCards();
+        final cards = _buildCards(state);
         if (c.maxWidth < 600) {
-          // Single column stack for mobile
           return Column(
             children: cards
                 .map((w) => Padding(
@@ -217,7 +237,6 @@ class _SummarySection extends StatelessWidget {
                 .toList(),
           );
         }
-        // 3-column row
         return Row(
           children: List.generate(cards.length, (i) {
             return Expanded(
@@ -232,18 +251,30 @@ class _SummarySection extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildCards() => [
+  List<Widget> _buildCards(AppState state) => [
         _HoverCard(
           child: SummaryCard(
             icon: Icons.payments_outlined,
             iconBg: DC.primaryContainer,
             iconColor: DC.onPrimaryContainer,
-            label: "TODAY'S REVENUE",
-            value: '\$2,840.50',
-            subtitle: TrendSubtitle(
-              text: '+12.5% from yesterday',
-              icon: Icons.trending_up_rounded,
-              color: DC.tertiary,
+            label: "PENDAPATAN KOTOR HARI INI",
+            value: formatRupiah(state.todayRevenue),
+            subtitle: InfoSubtitle(
+              text: '${state.todayCount} transaksi hari ini',
+              icon: Icons.receipt_long_rounded,
+            ),
+          ),
+        ),
+        _HoverCard(
+          child: SummaryCard(
+            icon: Icons.trending_up_rounded,
+            iconBg: DC.tertiaryContainer,
+            iconColor: DC.onTertiaryContainer,
+            label: 'KEUNTUNGAN BERSIH HARI INI',
+            value: formatRupiah(state.todayProfit),
+            subtitle: InfoSubtitle(
+              text: 'Berdasarkan modal otomatis',
+              icon: Icons.analytics_outlined,
             ),
           ),
         ),
@@ -252,25 +283,11 @@ class _SummarySection extends StatelessWidget {
             icon: Icons.receipt_long_outlined,
             iconBg: DC.secondaryContainer,
             iconColor: DC.onSecondaryContainer,
-            label: 'TRANSACTIONS',
-            value: '142',
-            subtitle: const InfoSubtitle(
-              text: 'Last sync: 2m ago',
-              icon: Icons.schedule_rounded,
-            ),
-          ),
-        ),
-        _HoverCard(
-          child: SummaryCard(
-            icon: Icons.inventory_outlined,
-            iconBg: DC.tertiaryContainer,
-            iconColor: DC.onTertiaryContainer,
-            label: 'INVENTORY ITEMS',
-            value: '86',
-            subtitle: TrendSubtitle(
-              text: '4 items low in stock',
-              icon: Icons.warning_amber_rounded,
-              color: DC.error,
+            label: 'TOTAL TRANSAKSI (SEMUA)',
+            value: '${state.transactions.length}',
+            subtitle: InfoSubtitle(
+              text: 'Tersimpan lokal',
+              icon: Icons.smartphone_rounded,
             ),
           ),
         ),

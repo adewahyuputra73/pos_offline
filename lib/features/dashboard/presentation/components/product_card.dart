@@ -1,13 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
-import '../models/mock_data.dart';
+import 'package:border_po/models/product.dart';
+import 'package:border_po/utils/formatters.dart';
 
 /// Individual product tile shown inside the grid.
 ///
 /// Purely presentational — takes a product, the current in-cart quantity,
-/// and a tap callback. Displays "Habis" overlay when out of stock.
+/// and a tap callback.
 class ProductCard extends StatelessWidget {
-  final MockProduct product;
+  final Product product;
   final int quantityInCart;
   final VoidCallback onTap;
 
@@ -22,7 +24,6 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final bool outOfStock = product.stock <= 0;
     final bool inCart = quantityInCart > 0;
 
     return Material(
@@ -47,7 +48,7 @@ class ProductCard extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: outOfStock ? null : onTap,
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -58,7 +59,6 @@ class ProductCard extends StatelessWidget {
                   aspectRatio: 1.25,
                   child: _ProductThumbnail(
                     product: product,
-                    outOfStock: outOfStock,
                     inCart: inCart,
                     quantityInCart: quantityInCart,
                   ),
@@ -71,16 +71,6 @@ class ProductCard extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  outOfStock ? 'Stok habis' : 'Stok ${product.stock}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: outOfStock
-                        ? scheme.error
-                        : scheme.onSurface.withValues(alpha: 0.55),
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -102,14 +92,12 @@ class ProductCard extends StatelessWidget {
 }
 
 class _ProductThumbnail extends StatelessWidget {
-  final MockProduct product;
-  final bool outOfStock;
+  final Product product;
   final bool inCart;
   final int quantityInCart;
 
   const _ProductThumbnail({
     required this.product,
-    required this.outOfStock,
     required this.inCart,
     required this.quantityInCart,
   });
@@ -123,37 +111,26 @@ class _ProductThumbnail extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                product.accent.withValues(alpha: 0.22),
-                product.accent.withValues(alpha: 0.08),
-              ],
-            ),
+            color: scheme.primary.withValues(alpha: 0.08),
           ),
-          child: Center(
-            child: Icon(product.icon, size: 46, color: product.accent),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: product.imageBase64 != null &&
+                    product.imageBase64!.isNotEmpty
+                ? Image.memory(
+                    base64Decode(product.imageBase64!),
+                    fit: BoxFit.cover,
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      size: 46,
+                      color: scheme.primary.withValues(alpha: 0.4),
+                    ),
+                  ),
           ),
         ),
-        if (outOfStock)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.black.withValues(alpha: 0.35),
-            ),
-            child: const Center(
-              child: Text(
-                'Habis',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-          ),
-        if (inCart && !outOfStock)
+        if (inCart)
           Positioned(
             top: 8,
             right: 8,

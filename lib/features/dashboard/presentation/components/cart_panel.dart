@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../models/mock_data.dart';
+import 'package:border_po/state/app_state.dart';
+import 'package:border_po/utils/formatters.dart';
 import 'cart_item_tile.dart';
 
 /// Reusable cart panel — used as a persistent sidebar on wide screens
@@ -8,7 +9,7 @@ import 'cart_item_tile.dart';
 ///
 /// Contains: header, scrollable item list, and a sticky checkout footer.
 class CartPanel extends StatelessWidget {
-  final List<MockCartLine> lines;
+  final List<CartLine> lines;
   final void Function(String productId) onIncrement;
   final void Function(String productId) onDecrement;
   final VoidCallback onClear;
@@ -29,9 +30,7 @@ class CartPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double subtotal = lines.fold(0, (s, l) => s + l.subtotal);
-    final double tax = subtotal * 0.10;
-    final double total = subtotal + tax;
+    final int subtotal = lines.fold(0, (s, l) => s + l.subtotal);
     final int totalQty = lines.fold(0, (s, l) => s + l.quantity);
 
     return Column(
@@ -61,9 +60,7 @@ class CartPanel extends StatelessWidget {
                 ),
         ),
         _CheckoutFooter(
-          subtotal: subtotal,
-          tax: tax,
-          total: total,
+          total: subtotal,
           disabled: lines.isEmpty,
           onCheckout: onCheckout,
         ),
@@ -240,15 +237,11 @@ class _EmptyCartPlaceholder extends StatelessWidget {
 }
 
 class _CheckoutFooter extends StatelessWidget {
-  final double subtotal;
-  final double tax;
-  final double total;
+  final int total;
   final bool disabled;
   final VoidCallback onCheckout;
 
   const _CheckoutFooter({
-    required this.subtotal,
-    required this.tax,
     required this.total,
     required this.disabled,
     required this.onCheckout,
@@ -273,21 +266,6 @@ class _CheckoutFooter extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _SummaryRow(label: 'Subtotal', value: subtotal, theme: theme),
-          const SizedBox(height: 6),
-          _SummaryRow(
-            label: 'Pajak (10%)',
-            value: tax,
-            theme: theme,
-            dimValue: true,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Divider(
-              height: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
           Row(
             children: [
               Text(
@@ -331,45 +309,6 @@ class _CheckoutFooter extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  final String label;
-  final double value;
-  final ThemeData theme;
-  final bool dimValue;
-
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    required this.theme,
-    this.dimValue = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = theme.colorScheme;
-    return Row(
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurface.withValues(alpha: 0.65),
-          ),
-        ),
-        const Spacer(),
-        Text(
-          formatRupiah(value),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: dimValue
-                ? scheme.onSurface.withValues(alpha: 0.65)
-                : scheme.onSurface,
-          ),
-        ),
-      ],
     );
   }
 }

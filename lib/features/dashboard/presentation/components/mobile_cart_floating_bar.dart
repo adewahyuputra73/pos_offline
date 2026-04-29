@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/mock_data.dart';
+import 'package:border_po/utils/formatters.dart';
 
 /// Sticky floating bar at the bottom of the screen on phones.
 ///
@@ -8,7 +8,7 @@ import '../models/mock_data.dart';
 /// cart is empty via an [AnimatedSwitcher].
 class MobileCartFloatingBar extends StatelessWidget {
   final int totalQty;
-  final double total;
+  final int total;
   final VoidCallback onTap;
 
   const MobileCartFloatingBar({
@@ -51,7 +51,7 @@ class MobileCartFloatingBar extends StatelessWidget {
 
 class _BarContent extends StatelessWidget {
   final int totalQty;
-  final double total;
+  final int total;
   final VoidCallback onTap;
 
   const _BarContent({
@@ -75,7 +75,6 @@ class _BarContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           child: Row(
             children: [
-              // Cart icon chip
               Container(
                 width: 42,
                 height: 42,
@@ -86,92 +85,40 @@ class _BarContent extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Icon(
-                      Icons.shopping_bag_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 20),
                     Positioned(
-                      top: 6,
-                      right: 6,
+                      top: 6, right: 6,
                       child: Container(
-                        width: 16,
-                        height: 16,
+                        width: 16, height: 16,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$totalQty',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: scheme.primary,
-                          ),
-                        ),
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: Text('$totalQty', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: scheme.primary)),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 14),
-
-              // Label + total
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '$totalQty item di keranjang',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('$totalQty item di keranjang', style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontSize: 12, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text(
-                      formatRupiah(total),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
+                    Text(formatRupiah(total), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.4)),
                   ],
                 ),
               ),
-
-              // CTA
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(12)),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Lihat',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text('Lihat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
                     SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                    Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                   ],
                 ),
               ),
