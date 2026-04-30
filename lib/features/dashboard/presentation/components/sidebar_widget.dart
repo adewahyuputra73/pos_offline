@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/dashboard_colors.dart';
 
-enum NavItem { dashboard, orders, inventory, settings }
+enum NavItem { dashboard, orders, transactions, inventory, hpp, settings }
 
 /// Fixed 256-dp sidebar — mirrors the HTML `<aside class="w-64 fixed ...">`.
 ///
@@ -23,9 +23,9 @@ class SidebarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 256,
-      height: double.infinity,
       color: DC.stone100,
-      child: Column(
+      child: SafeArea(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── BARISTA POS brand ──────────────────────────────────────────────
@@ -58,11 +58,25 @@ class SidebarWidget extends StatelessWidget {
             onTap: () => onSelected(NavItem.orders),
           ),
           _NavTile(
+            icon: Icons.history_edu_outlined,
+            activeIcon: Icons.history_edu_rounded,
+            label: 'RIWAYAT TRANSAKSI',
+            selected: selected == NavItem.transactions,
+            onTap: () => onSelected(NavItem.transactions),
+          ),
+          _NavTile(
             icon: Icons.kitchen_outlined,
             activeIcon: Icons.kitchen_rounded,
             label: 'BAHAN BAKU',
             selected: selected == NavItem.inventory,
             onTap: () => onSelected(NavItem.inventory),
+          ),
+          _NavTile(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
+            label: 'LAPORAN HPP',
+            selected: selected == NavItem.hpp,
+            onTap: () => onSelected(NavItem.hpp),
           ),
 
           const Spacer(),
@@ -75,8 +89,9 @@ class SidebarWidget extends StatelessWidget {
             selected: selected == NavItem.settings,
             onTap: () => onSelected(NavItem.settings),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
         ],
+      ),
       ),
     );
   }
