@@ -26,72 +26,89 @@ class SidebarWidget extends StatelessWidget {
       color: DC.stone100,
       child: SafeArea(
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── BARISTA POS brand ──────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-            child: Text(
-              'BARISTA POS',
-              style: manrope(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: DC.stone900,
-                letterSpacing: -0.8,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── BARISTA POS brand ────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+              child: Text(
+                'BARISTA POS',
+                style: manrope(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: DC.stone900,
+                  letterSpacing: -0.8,
+                ),
               ),
             ),
-          ),
 
-          // ── Primary nav items ──────────────────────────────────────────────
-          _NavTile(
-            icon: Icons.dashboard_outlined,
-            activeIcon: Icons.dashboard_rounded,
-            label: 'DASHBOARD',
-            selected: selected == NavItem.dashboard,
-            onTap: () => onSelected(NavItem.dashboard),
-          ),
-          _NavTile(
-            icon: Icons.receipt_long_outlined,
-            activeIcon: Icons.receipt_long_rounded,
-            label: 'ORDERS',
-            selected: selected == NavItem.orders,
-            onTap: () => onSelected(NavItem.orders),
-          ),
-          _NavTile(
-            icon: Icons.history_edu_outlined,
-            activeIcon: Icons.history_edu_rounded,
-            label: 'RIWAYAT TRANSAKSI',
-            selected: selected == NavItem.transactions,
-            onTap: () => onSelected(NavItem.transactions),
-          ),
-          _NavTile(
-            icon: Icons.kitchen_outlined,
-            activeIcon: Icons.kitchen_rounded,
-            label: 'BAHAN BAKU',
-            selected: selected == NavItem.inventory,
-            onTap: () => onSelected(NavItem.inventory),
-          ),
-          _NavTile(
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics_rounded,
-            label: 'LAPORAN HPP',
-            selected: selected == NavItem.hpp,
-            onTap: () => onSelected(NavItem.hpp),
-          ),
+            // ── Scrollable nav items ─────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _NavTile(
+                      icon: Icons.dashboard_outlined,
+                      activeIcon: Icons.dashboard_rounded,
+                      label: 'DASHBOARD',
+                      selected: selected == NavItem.dashboard,
+                      onTap: () => onSelected(NavItem.dashboard),
+                    ),
+                    _NavTile(
+                      icon: Icons.receipt_long_outlined,
+                      activeIcon: Icons.receipt_long_rounded,
+                      label: 'ORDERS',
+                      selected: selected == NavItem.orders,
+                      onTap: () => onSelected(NavItem.orders),
+                    ),
+                    _NavTile(
+                      icon: Icons.history_edu_outlined,
+                      activeIcon: Icons.history_edu_rounded,
+                      label: 'RIWAYAT TRANSAKSI',
+                      selected: selected == NavItem.transactions,
+                      onTap: () => onSelected(NavItem.transactions),
+                    ),
+                    _NavTile(
+                      icon: Icons.kitchen_outlined,
+                      activeIcon: Icons.kitchen_rounded,
+                      label: 'BAHAN BAKU',
+                      selected: selected == NavItem.inventory,
+                      onTap: () => onSelected(NavItem.inventory),
+                    ),
+                    _NavTile(
+                      icon: Icons.analytics_outlined,
+                      activeIcon: Icons.analytics_rounded,
+                      label: 'LAPORAN HPP',
+                      selected: selected == NavItem.hpp,
+                      onTap: () => onSelected(NavItem.hpp),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-          const Spacer(),
+            // ── Divider ──────────────────────────────────────────────────────
+            Divider(
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+              color: DC.stone200,
+            ),
 
-          // ── Settings pinned at bottom ──────────────────────────────────────
-          _NavTile(
-            icon: Icons.settings_outlined,
-            activeIcon: Icons.settings_rounded,
-            label: 'SETTINGS',
-            selected: selected == NavItem.settings,
-            onTap: () => onSelected(NavItem.settings),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
+            // ── Settings pinned at bottom ────────────────────────────────────
+            _NavTile(
+              icon: Icons.settings_outlined,
+              activeIcon: Icons.settings_rounded,
+              label: 'SETTINGS',
+              selected: selected == NavItem.settings,
+              onTap: () => onSelected(NavItem.settings),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
