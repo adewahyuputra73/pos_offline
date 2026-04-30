@@ -156,6 +156,8 @@ class _CheckoutBodyState extends State<CheckoutBody> {
 
   Widget _buildCatalog(BuildContext context, AppState state, double maxWidth) {
     final compact = maxWidth < 600;
+    final hasShift = state.hasActiveShift;
+    final cashierName = state.activeShift?.cashierName ?? '';
     List<Product> products = state.productsByCategory(_selectedCategoryId);
 
     return Column(
@@ -191,7 +193,7 @@ class _CheckoutBodyState extends State<CheckoutBody> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Kasir',
+                      hasShift ? cashierName : 'Kasir',
                       style: manrope(
                         fontSize: compact ? 24 : 32,
                         fontWeight: FontWeight.w800,
@@ -202,9 +204,93 @@ class _CheckoutBodyState extends State<CheckoutBody> {
                   ],
                 ),
               ),
+              // Shift status chip
+              if (hasShift)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ADE80).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF16A34A),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'SHIFT AKTIF',
+                        style: manrope(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF16A34A),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: DC.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock_outline_rounded, size: 12, color: DC.error),
+                      const SizedBox(width: 6),
+                      Text(
+                        'SHIFT BELUM BUKA',
+                        style: manrope(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: DC.error,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
+
+        // No-shift warning banner
+        if (!hasShift)
+          Container(
+            margin: EdgeInsets.fromLTRB(compact ? 16 : 24, 16, compact ? 16 : 24, 0),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: DC.error.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: DC.error.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 18, color: DC.error),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Buka shift terlebih dahulu untuk memulai transaksi.',
+                    style: manrope(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: DC.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
         // Categories
         Container(
@@ -298,8 +384,29 @@ class _CheckoutBodyState extends State<CheckoutBody> {
   Widget _buildProductCard(
       BuildContext context, Product product, AppState state) {
     final cat = state.categoryById(product.categoryId);
+    final hasShift = state.hasActiveShift;
     return GestureDetector(
       onTap: () {
+        if (!hasShift) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.lock_outline_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text('Buka shift kasir terlebih dahulu untuk bertransaksi.'),
+                  ),
+                ],
+              ),
+              backgroundColor: DC.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
         context.read<AppState>().addToCart(product);
       },
       child: Container(
@@ -400,6 +507,70 @@ class _CheckoutSidebar extends StatefulWidget {
 class _CheckoutSidebarState extends State<_CheckoutSidebar> {
   String _paymentMethod = 'cash'; // 'cash' or 'qris'
 
+  // ── No-shift locked panel ──────────────────────────────────────────────────
+  Widget _buildNoShiftPanel() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: DC.error.withValues(alpha: 0.08),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.lock_clock_rounded, size: 48, color: DC.error.withValues(alpha: 0.7)),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Shift Belum Dibuka',
+          style: manrope(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: DC.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            'Buka shift kasir terlebih dahulu sebelum memproses transaksi.',
+            textAlign: TextAlign.center,
+            style: manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: DC.onSurfaceVariant,
+              height: 1.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: DC.error.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: DC.error.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline_rounded, size: 14, color: DC.error.withValues(alpha: 0.7)),
+              const SizedBox(width: 8),
+              Text(
+                'Buka menu SHIFT di sidebar',
+                style: manrope(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: DC.error.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   void _onPay(AppState state) async {
     if (state.cart.isEmpty) return;
     
@@ -488,6 +659,11 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // When shift is not active, show a locked panel
+    if (!state.hasActiveShift) {
+      return _buildNoShiftPanel();
+    }
 
     return Column(
       children: [

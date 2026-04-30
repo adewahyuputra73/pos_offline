@@ -255,6 +255,7 @@ class InvoicePage extends StatelessWidget {
 
   Widget _buildInvoiceInfo(bool isMobile) {
     final paymentLabel = record.paymentMethod == PaymentMethod.cash ? 'Tunai' : 'QRIS';
+    final hasCashier = record.cashierName.isNotEmpty;
     final items = [
       _InfoChip(
         icon: Icons.calendar_today_rounded,
@@ -271,6 +272,12 @@ class InvoicePage extends StatelessWidget {
         label: 'Pembayaran',
         value: paymentLabel,
       ),
+      if (hasCashier)
+        _InfoChip(
+          icon: Icons.badge_outlined,
+          label: 'Kasir',
+          value: record.cashierName,
+        ),
       _InfoChip(
         icon: Icons.check_circle_outline_rounded,
         label: 'Status',
@@ -288,11 +295,10 @@ class InvoicePage extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: items.map((item) => Expanded(child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: item,
-      ))).toList(),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) => IntrinsicWidth(child: item)).toList(),
     );
   }
 

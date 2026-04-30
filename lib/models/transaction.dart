@@ -60,6 +60,7 @@ class TransactionRecord {
   final int? change; // for cash
   final String? qrisImageBase64; // base64-encoded image (no data URI prefix)
   final DateTime createdAt;
+  final String cashierName; // Nama kasir dari shift aktif
 
   const TransactionRecord({
     required this.id,
@@ -72,6 +73,7 @@ class TransactionRecord {
     this.paidAmount,
     this.change,
     this.qrisImageBase64,
+    this.cashierName = '',
   });
 
   int get profit => total - taxAmount - cogs;
@@ -87,6 +89,7 @@ class TransactionRecord {
         'change': change,
         'qrisImage': qrisImageBase64,
         'createdAt': createdAt.toIso8601String(),
+        'cashierName': cashierName,
       };
 
   factory TransactionRecord.fromJson(Map<String, dynamic> json) =>
@@ -104,6 +107,7 @@ class TransactionRecord {
         change: (json['change'] as num?)?.toInt(),
         qrisImageBase64: json['qrisImage'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
+        cashierName: json['cashierName'] as String? ?? '',
       );
 }
 

@@ -527,12 +527,13 @@ class AppState extends ChangeNotifier {
     final total = cartGrandTotal;
     final taxAmount = cartTaxAmount;
     final itemCogs = _processCheckoutStockAndCogs();
-    
+    final cashierName = activeShift?.cashierName ?? '';
+
     int totalCogs = 0;
     for (int i = 0; i < _cart.length; i++) {
       totalCogs += itemCogs[i] * _cart[i].quantity;
     }
-    
+
     final tx = TransactionRecord(
       id: _uuid.v4(),
       items: _cart.asMap().entries.map((entry) {
@@ -553,6 +554,7 @@ class AppState extends ChangeNotifier {
       paidAmount: paidAmount,
       change: paidAmount - total,
       createdAt: DateTime.now(),
+      cashierName: cashierName,
     );
     _transactions = [..._transactions, tx];
     await _storage.saveTransactions(_transactions);
@@ -565,6 +567,7 @@ class AppState extends ChangeNotifier {
     final total = cartGrandTotal;
     final taxAmount = cartTaxAmount;
     final itemCogs = _processCheckoutStockAndCogs();
+    final cashierName = activeShift?.cashierName ?? '';
 
     int totalCogs = 0;
     for (int i = 0; i < _cart.length; i++) {
@@ -590,6 +593,7 @@ class AppState extends ChangeNotifier {
       paymentMethod: PaymentMethod.qris,
       qrisImageBase64: imageBase64,
       createdAt: DateTime.now(),
+      cashierName: cashierName,
     );
     _transactions = [..._transactions, tx];
     await _storage.saveTransactions(_transactions);
