@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/category.dart';
 import '../models/ingredient.dart';
 import '../models/product.dart';
+import '../models/shift.dart';
 import '../models/store_profile.dart';
 import '../models/transaction.dart';
 import '../services/storage_service.dart';
@@ -18,6 +19,26 @@ class CartLine {
   int get subtotal => product.price * quantity;
 }
 
+/// Data class for HPP Summary
+class ProductHppSummary {
+  final String productId;
+  final String productName;
+  final int totalQuantitySold;
+  final int totalRevenue;
+  final int totalCogs;
+
+  ProductHppSummary({
+    required this.productId,
+    required this.productName,
+    required this.totalQuantitySold,
+    required this.totalRevenue,
+    required this.totalCogs,
+  });
+
+  int get totalProfit => totalRevenue - totalCogs;
+  double get marginPercent => totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0.0;
+}
+
 /// Single source of truth for the whole app.
 ///
 /// Holds [products], [categories] and [transactions] in memory and persists
@@ -30,6 +51,7 @@ class AppState extends ChangeNotifier {
     _categories = _storage.loadCategories();
     _transactions = _storage.loadTransactions();
     _storeProfile = _storage.loadStoreProfile();
+    _shifts = _storage.loadShifts();
   }
 
   final StorageService _storage;
@@ -39,6 +61,7 @@ class AppState extends ChangeNotifier {
   late List<Product> _products;
   late List<ProductCategory> _categories;
   late List<TransactionRecord> _transactions;
+  late List<Shift> _shifts;
   StoreProfile _storeProfile = const StoreProfile();
   final List<CartLine> _cart = [];
 
@@ -58,7 +81,10 @@ class AppState extends ChangeNotifier {
   int get cartItemCount =>
       _cart.fold<int>(0, (sum, line) => sum + line.quantity);
   int get cartTotal => _cart.fold<int>(0, (sum, line) => sum + line.subtotal);
-
+  
+  int get cartTaxAmount => (cartTotal * (_storeProfile.taxRate / 100)).round();
+  
+  int get cartGrandTotal => cartTotal + cartTaxAmount;
   ProductCategory? categoryById(String? id) {
     if (id == null) return null;
     for (final c in _categories) {
@@ -70,6 +96,104 @@ class AppState extends ChangeNotifier {
   List<Product> productsByCategory(String? categoryId) {
     if (categoryId == null) return products;
     return _products.where((p) => p.categoryId == categoryId).toList();
+  }
+
+  Ingredient? ingredientById(String id) {
+    for (final i in _ingredients) {
+      if (i.id == id) return i;
+    }
+    return null;
+  }
+
+  /// Ingredients with stock at or below threshold.
+  List<Ingredient> lowStockIngredients({int threshold = 50}) {
+    return _ingredients.where((i) => i.stock <= threshold).toList();
+  }
+
+  /// Check if all ingredients are sufficient for current cart.
+  /// Returns list of ingredient names that are insufficient.
+  List<String> get insufficientStockWarnings {
+    // Accumulate total needed per ingredient across all cart lines
+    final Map<String, int> needed = {};
+    for (final line in _cart) {
+      for (final r in line.product.recipe) {
+        needed[r.ingredientId] = (needed[r.ingredientId] ?? 0) + (r.quantity * line.quantity);
+      }
+    }
+    final warnings = <String>[];
+    for (final entry in needed.entries) {
+      final ing = ingredientById(entry.key);
+      if (ing != null && ing.stock < entry.value) {
+        final kurang = entry.value - ing.stock;
+        warnings.add('${ing.name} kurang ${kurang} ${ing.unit}');
+      }
+    }
+    return warnings;
+  }
+
+  // ---------------- Shift getters ----------------
+
+  List<Shift> get shifts {
+    final sorted = [..._shifts]
+      ..sort((a, b) => b.openedAt.compareTo(a.openedAt));
+    return List.unmodifiable(sorted);
+  }
+
+  /// Shift yang sedang aktif (belum ditutup), atau null.
+  Shift? get activeShift =>
+      _shifts.where((s) => s.isActive).firstOrNull;
+
+  bool get hasActiveShift => activeShift != null;
+
+  /// Transaksi milik shift tertentu (berdasarkan rentang waktu).
+  List<TransactionRecord> transactionsForShift(Shift shift) {
+    final end = shift.closedAt ?? DateTime.now();
+    return _transactions.where((t) {
+      return !t.createdAt.isBefore(shift.openedAt) &&
+          !t.createdAt.isAfter(end);
+    }).toList();
+  }
+
+  /// Stats realtime untuk shift aktif.
+  int get activeShiftTransactionCount {
+    final s = activeShift;
+    if (s == null) return 0;
+    return transactionsForShift(s).length;
+  }
+
+  int get activeShiftRevenue {
+    final s = activeShift;
+    if (s == null) return 0;
+    return transactionsForShift(s).fold(0, (sum, t) => sum + t.total);
+  }
+
+  int get activeShiftCashRevenue {
+    final s = activeShift;
+    if (s == null) return 0;
+    return transactionsForShift(s)
+        .where((t) => t.paymentMethod == PaymentMethod.cash)
+        .fold(0, (sum, t) => sum + t.total);
+  }
+
+  int get activeShiftQrisRevenue {
+    final s = activeShift;
+    if (s == null) return 0;
+    return transactionsForShift(s)
+        .where((t) => t.paymentMethod == PaymentMethod.qris)
+        .fold(0, (sum, t) => sum + t.total);
+  }
+
+  int get activeShiftTax {
+    final s = activeShift;
+    if (s == null) return 0;
+    return transactionsForShift(s).fold(0, (sum, t) => sum + t.taxAmount);
+  }
+
+  /// Estimasi uang di laci kas: modal awal + semua pendapatan tunai.
+  int get activeShiftExpectedCash {
+    final s = activeShift;
+    if (s == null) return 0;
+    return s.openingCash + activeShiftCashRevenue;
   }
 
   // ---------------- Today's stats ----------------
@@ -86,10 +210,79 @@ class AppState extends ChangeNotifier {
   int get todayRevenue =>
       todayTransactions.fold<int>(0, (sum, t) => sum + t.total);
 
+  int get todayNetSales =>
+      todayTransactions.fold<int>(0, (sum, t) => sum + (t.total - t.taxAmount));
+
+  int get todayTax =>
+      todayTransactions.fold<int>(0, (sum, t) => sum + t.taxAmount);
+
+  int get todayCogs =>
+      todayTransactions.fold<int>(0, (sum, t) => sum + t.cogs);
+
   int get todayProfit =>
       todayTransactions.fold<int>(0, (sum, t) => sum + t.profit);
 
   int get todayCount => todayTransactions.length;
+
+  // ---------------- HPP Analytics ----------------
+
+  int cogsForProduct(Product product) {
+    if (product.recipe.isNotEmpty) {
+      int cogs = 0;
+      for (final recipeItem in product.recipe) {
+        final ing = ingredientById(recipeItem.ingredientId);
+        if (ing != null) {
+          cogs += recipeItem.quantity * ing.costPerUnit;
+        }
+      }
+      return cogs;
+    }
+    return product.manualCost ?? 0;
+  }
+
+  Map<String, ProductHppSummary> hppReport({DateTime? from, DateTime? to}) {
+    final Map<String, ProductHppSummary> map = {};
+
+    for (final t in _transactions) {
+      if (from != null && t.createdAt.isBefore(from)) continue;
+      if (to != null && t.createdAt.isAfter(to)) continue;
+
+      for (final item in t.items) {
+        final existing = map[item.productId];
+        final revenue = item.subtotal;
+        
+        // Use stored cogsPerUnit if available (from new transactions),
+        // otherwise calculate current cogs using product recipe (for old transactions)
+        int itemCogs = 0;
+        if (item.cogsPerUnit > 0) {
+          itemCogs = item.totalCogs;
+        } else {
+          final product = _products.where((p) => p.id == item.productId).firstOrNull;
+          int cogsPerUnit = product != null ? cogsForProduct(product) : 0;
+          itemCogs = cogsPerUnit * item.quantity;
+        }
+
+        if (existing == null) {
+          map[item.productId] = ProductHppSummary(
+            productId: item.productId,
+            productName: item.productName,
+            totalQuantitySold: item.quantity,
+            totalRevenue: revenue,
+            totalCogs: itemCogs,
+          );
+        } else {
+          map[item.productId] = ProductHppSummary(
+            productId: item.productId,
+            productName: item.productName,
+            totalQuantitySold: existing.totalQuantitySold + item.quantity,
+            totalRevenue: existing.totalRevenue + revenue,
+            totalCogs: existing.totalCogs + itemCogs,
+          );
+        }
+      }
+    }
+    return map;
+  }
 
   // ---------------- Ingredients CRUD ----------------
 
@@ -291,8 +484,8 @@ class AppState extends ChangeNotifier {
 
   // ---------------- Transactions ----------------
 
-  int _processCheckoutStockAndCogs() {
-    int totalCogs = 0;
+  List<int> _processCheckoutStockAndCogs() {
+    List<int> itemCogs = [];
     bool ingredientsChanged = false;
 
     for (final line in _cart) {
@@ -318,7 +511,7 @@ class AppState extends ChangeNotifier {
         // Use manual cost if recipe is empty
         productCogs = product.manualCost ?? 0;
       }
-      totalCogs += (productCogs * quantity);
+      itemCogs.add(productCogs);
     }
 
     if (ingredientsChanged) {
@@ -327,25 +520,35 @@ class AppState extends ChangeNotifier {
       // the caller (checkoutCash/Qris) will do it.
     }
 
-    return totalCogs;
+    return itemCogs;
   }
 
   Future<TransactionRecord> checkoutCash({required int paidAmount}) async {
-    final total = cartTotal;
-    final cogs = _processCheckoutStockAndCogs();
+    final total = cartGrandTotal;
+    final taxAmount = cartTaxAmount;
+    final itemCogs = _processCheckoutStockAndCogs();
+    
+    int totalCogs = 0;
+    for (int i = 0; i < _cart.length; i++) {
+      totalCogs += itemCogs[i] * _cart[i].quantity;
+    }
     
     final tx = TransactionRecord(
       id: _uuid.v4(),
-      items: _cart
-          .map((l) => TransactionItem(
-                productId: l.product.id,
-                productName: l.product.name,
-                price: l.product.price,
-                quantity: l.quantity,
-              ))
-          .toList(),
+      items: _cart.asMap().entries.map((entry) {
+        final i = entry.key;
+        final l = entry.value;
+        return TransactionItem(
+          productId: l.product.id,
+          productName: l.product.name,
+          price: l.product.price,
+          quantity: l.quantity,
+          cogsPerUnit: itemCogs[i],
+        );
+      }).toList(),
       total: total,
-      cogs: cogs,
+      cogs: totalCogs,
+      taxAmount: taxAmount,
       paymentMethod: PaymentMethod.cash,
       paidAmount: paidAmount,
       change: paidAmount - total,
@@ -359,21 +562,31 @@ class AppState extends ChangeNotifier {
   }
 
   Future<TransactionRecord> checkoutQris({required String imageBase64}) async {
-    final total = cartTotal;
-    final cogs = _processCheckoutStockAndCogs();
+    final total = cartGrandTotal;
+    final taxAmount = cartTaxAmount;
+    final itemCogs = _processCheckoutStockAndCogs();
+
+    int totalCogs = 0;
+    for (int i = 0; i < _cart.length; i++) {
+      totalCogs += itemCogs[i] * _cart[i].quantity;
+    }
 
     final tx = TransactionRecord(
       id: _uuid.v4(),
-      items: _cart
-          .map((l) => TransactionItem(
-                productId: l.product.id,
-                productName: l.product.name,
-                price: l.product.price,
-                quantity: l.quantity,
-              ))
-          .toList(),
+      items: _cart.asMap().entries.map((entry) {
+        final i = entry.key;
+        final l = entry.value;
+        return TransactionItem(
+          productId: l.product.id,
+          productName: l.product.name,
+          price: l.product.price,
+          quantity: l.quantity,
+          cogsPerUnit: itemCogs[i],
+        );
+      }).toList(),
       total: total,
-      cogs: cogs,
+      cogs: totalCogs,
+      taxAmount: taxAmount,
       paymentMethod: PaymentMethod.qris,
       qrisImageBase64: imageBase64,
       createdAt: DateTime.now(),
@@ -383,6 +596,62 @@ class AppState extends ChangeNotifier {
     _cart.clear();
     notifyListeners();
     return tx;
+  }
+
+  // ---------------- Shift Management ----------------
+
+  Future<Shift> openShift({
+    required String cashierName,
+    required int openingCash,
+  }) async {
+    // Pastikan tidak ada shift aktif lainnya
+    if (hasActiveShift) {
+      throw StateError('Masih ada shift aktif. Tutup shift sekarang sebelum membuka yang baru.');
+    }
+    final shift = Shift(
+      id: _uuid.v4(),
+      cashierName: cashierName.trim().isEmpty ? 'Kasir' : cashierName.trim(),
+      openingCash: openingCash,
+      openedAt: DateTime.now(),
+    );
+    _shifts = [..._shifts, shift];
+    await _storage.saveShifts(_shifts);
+    notifyListeners();
+    return shift;
+  }
+
+  Future<Shift> closeShift({
+    required int closingCash,
+    String? notes,
+  }) async {
+    final active = activeShift;
+    if (active == null) throw StateError('Tidak ada shift aktif.');
+
+    final txs = transactionsForShift(active);
+    final rev = txs.fold<int>(0, (s, t) => s + t.total);
+    final cashRev = txs
+        .where((t) => t.paymentMethod == PaymentMethod.cash)
+        .fold<int>(0, (s, t) => s + t.total);
+    final qrisRev = txs
+        .where((t) => t.paymentMethod == PaymentMethod.qris)
+        .fold<int>(0, (s, t) => s + t.total);
+    final tax = txs.fold<int>(0, (s, t) => s + t.taxAmount);
+
+    final closed = active.copyWith(
+      closingCash: closingCash,
+      closedAt: DateTime.now(),
+      notes: notes?.trim().isEmpty == true ? null : notes?.trim(),
+      snapshotTransactions: txs.length,
+      snapshotRevenue: rev,
+      snapshotCash: cashRev,
+      snapshotQris: qrisRev,
+      snapshotTax: tax,
+    );
+
+    _shifts = _shifts.map((s) => s.id == active.id ? closed : s).toList();
+    await _storage.saveShifts(_shifts);
+    notifyListeners();
+    return closed;
   }
 
   // ---------------- Maintenance ----------------

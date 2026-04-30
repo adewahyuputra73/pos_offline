@@ -18,21 +18,25 @@ class TransactionItem {
   final String productName;
   final int price;
   final int quantity;
+  final int cogsPerUnit;
 
   const TransactionItem({
     required this.productId,
     required this.productName,
     required this.price,
     required this.quantity,
+    this.cogsPerUnit = 0,
   });
 
   int get subtotal => price * quantity;
+  int get totalCogs => cogsPerUnit * quantity;
 
   Map<String, dynamic> toJson() => {
         'productId': productId,
         'productName': productName,
         'price': price,
         'quantity': quantity,
+        'cogsPerUnit': cogsPerUnit,
       };
 
   factory TransactionItem.fromJson(Map<String, dynamic> json) =>
@@ -41,6 +45,7 @@ class TransactionItem {
         productName: json['productName'] as String? ?? '',
         price: (json['price'] as num).toInt(),
         quantity: (json['quantity'] as num).toInt(),
+        cogsPerUnit: (json['cogsPerUnit'] as num?)?.toInt() ?? 0,
       );
 }
 
@@ -49,6 +54,7 @@ class TransactionRecord {
   final List<TransactionItem> items;
   final int total;
   final int cogs; // Cost of Goods Sold (Modal)
+  final int taxAmount; // Pajak
   final PaymentMethod paymentMethod;
   final int? paidAmount; // for cash
   final int? change; // for cash
@@ -60,6 +66,7 @@ class TransactionRecord {
     required this.items,
     required this.total,
     required this.cogs,
+    this.taxAmount = 0,
     required this.paymentMethod,
     required this.createdAt,
     this.paidAmount,
@@ -67,13 +74,14 @@ class TransactionRecord {
     this.qrisImageBase64,
   });
 
-  int get profit => total - cogs;
+  int get profit => total - taxAmount - cogs;
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'items': items.map((e) => e.toJson()).toList(),
         'total': total,
         'cogs': cogs,
+        'taxAmount': taxAmount,
         'paymentMethod': paymentMethodToString(paymentMethod),
         'paidAmount': paidAmount,
         'change': change,
@@ -89,6 +97,7 @@ class TransactionRecord {
             .toList(),
         total: (json['total'] as num).toInt(),
         cogs: (json['cogs'] as num?)?.toInt() ?? 0, // Default to 0 for older records
+        taxAmount: (json['taxAmount'] as num?)?.toInt() ?? 0,
         paymentMethod:
             paymentMethodFromString(json['paymentMethod'] as String),
         paidAmount: (json['paidAmount'] as num?)?.toInt(),
@@ -97,3 +106,4 @@ class TransactionRecord {
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 }
+

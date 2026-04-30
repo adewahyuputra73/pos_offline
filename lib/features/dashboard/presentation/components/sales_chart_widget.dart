@@ -29,6 +29,84 @@ class _SalesChartWidgetState extends State<SalesChartWidget> {
       builder: (context, constraints) {
         final bool compact = constraints.maxWidth < 400;
         final double pad = compact ? 16 : 32;
+        final bool hasBoundedHeight = constraints.maxHeight.isFinite;
+
+        // The chart area widget
+        Widget chartArea = LayoutBuilder(
+          builder: (context, boxConstraints) {
+            if (bars.isEmpty || bars.every((b) => b.value == 0)) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bar_chart_rounded, size: 40, color: DC.onSurfaceVariant.withValues(alpha: 0.3)),
+                    const SizedBox(height: 8),
+                    Text('Belum ada data', style: manrope(fontSize: 13, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
+                  ],
+                ),
+              );
+            }
+            final maxVal = bars.map((b) => b.value).reduce((a, b) => a > b ? a : b);
+            return Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                Positioned.fill(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(4, (_) => Divider(height: 1, thickness: 1, color: DC.surfaceContainer)),
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: Row(
+                    key: ValueKey(_mode),
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: bars.map((b) => _BarWidget(bar: b, maxValue: maxVal, chartHeight: boxConstraints.maxHeight, isRevenue: _mode == 'REVENUE')).toList(),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+
+        // Day labels
+        Widget dayLabels = AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Row(
+            key: ValueKey('${_mode}_labels'),
+            children: bars.map((b) => Expanded(
+              child: Text(b.day, textAlign: TextAlign.center, style: manrope(fontSize: compact ? 8 : 10, fontWeight: FontWeight.w700, letterSpacing: compact ? 0.8 : 1.4, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
+            )).toList(),
+          ),
+        );
+
+        // Header widgets (title, subtitle, mode buttons)
+        List<Widget> headerWidgets = [
+          Text(
+            'Performa Penjualan',
+            style: manrope(fontSize: compact ? 16 : 20, fontWeight: FontWeight.w700, color: DC.deepBrown),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '7 hari terakhir',
+            style: manrope(fontSize: compact ? 11 : 13, color: DC.onSurfaceVariant.withValues(alpha: 0.7)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: ['REVENUE', 'TRANSAKSI'].map((p) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _PeriodBtn(
+                  label: p == 'REVENUE' ? 'Pendapatan' : 'Jumlah',
+                  selected: p == _mode,
+                  onTap: () => setState(() => _mode = p),
+                  compact: compact,
+                ),
+              );
+            }).toList(),
+          ),
+          SizedBox(height: compact ? 12 : 24),
+        ];
 
         return Container(
           padding: EdgeInsets.all(pad),
@@ -43,83 +121,31 @@ class _SalesChartWidgetState extends State<SalesChartWidget> {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Performa Penjualan',
-                style: manrope(fontSize: compact ? 16 : 20, fontWeight: FontWeight.w700, color: DC.deepBrown),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '7 hari terakhir',
-                style: manrope(fontSize: compact ? 11 : 13, color: DC.onSurfaceVariant.withValues(alpha: 0.7)),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: ['REVENUE', 'TRANSAKSI'].map((p) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _PeriodBtn(
-                      label: p == 'REVENUE' ? 'Pendapatan' : 'Jumlah',
-                      selected: p == _mode,
-                      onTap: () => setState(() => _mode = p),
-                      compact: compact,
+          child: hasBoundedHeight
+              // BOUNDED: Use Expanded so chart fills remaining space
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...headerWidgets,
+                    Expanded(child: chartArea),
+                    SizedBox(height: compact ? 8 : 16),
+                    dayLabels,
+                  ],
+                )
+              // UNBOUNDED (inside ScrollView): Use fixed height
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...headerWidgets,
+                    SizedBox(
+                      height: (MediaQuery.of(context).size.height * 0.28).clamp(150.0, 280.0),
+                      child: chartArea,
                     ),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: compact ? 20 : 40),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, boxConstraints) {
-                    if (bars.isEmpty || bars.every((b) => b.value == 0)) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.bar_chart_rounded, size: 40, color: DC.onSurfaceVariant.withValues(alpha: 0.3)),
-                            const SizedBox(height: 8),
-                            Text('Belum ada data', style: manrope(fontSize: 13, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
-                          ],
-                        ),
-                      );
-                    }
-                    final maxVal = bars.map((b) => b.value).reduce((a, b) => a > b ? a : b);
-                    return Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Positioned.fill(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(4, (_) => Divider(height: 1, thickness: 1, color: DC.surfaceContainer)),
-                          ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: Row(
-                            key: ValueKey(_mode),
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: bars.map((b) => _BarWidget(bar: b, maxValue: maxVal, chartHeight: boxConstraints.maxHeight, isRevenue: _mode == 'REVENUE')).toList(),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                    SizedBox(height: compact ? 8 : 16),
+                    dayLabels,
+                  ],
                 ),
-              ),
-              SizedBox(height: compact ? 12 : 24),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Row(
-                  key: ValueKey('${_mode}_labels'),
-                  children: bars.map((b) => Expanded(
-                    child: Text(b.day, textAlign: TextAlign.center, style: manrope(fontSize: compact ? 8 : 10, fontWeight: FontWeight.w700, letterSpacing: compact ? 0.8 : 1.4, color: DC.onSurfaceVariant.withValues(alpha: 0.5))),
-                  )).toList(),
-                ),
-              ),
-            ],
-          ),
         );
       },
     );

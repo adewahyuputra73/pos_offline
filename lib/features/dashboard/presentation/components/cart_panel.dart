@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
 import 'package:border_po/state/app_state.dart';
 import 'package:border_po/utils/formatters.dart';
 import 'cart_item_tile.dart';
@@ -30,8 +31,13 @@ class CartPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int subtotal = lines.fold(0, (s, l) => s + l.subtotal);
+    // We use context.watch to react to tax rate changes even if cart is unchanged
+    final state = Provider.of<AppState>(context);
+    final int subtotal = state.cartTotal;
+    final int taxAmount = state.cartTaxAmount;
+    final int grandTotal = state.cartGrandTotal;
     final int totalQty = lines.fold(0, (s, l) => s + l.quantity);
+    final double taxRate = state.storeProfile.taxRate;
 
     return Column(
       children: [
@@ -60,7 +66,10 @@ class CartPanel extends StatelessWidget {
                 ),
         ),
         _CheckoutFooter(
-          total: subtotal,
+          subtotal: subtotal,
+          taxRate: taxRate,
+          taxAmount: taxAmount,
+          grandTotal: grandTotal,
           disabled: lines.isEmpty,
           onCheckout: onCheckout,
         ),
@@ -237,12 +246,18 @@ class _EmptyCartPlaceholder extends StatelessWidget {
 }
 
 class _CheckoutFooter extends StatelessWidget {
-  final int total;
+  final int subtotal;
+  final double taxRate;
+  final int taxAmount;
+  final int grandTotal;
   final bool disabled;
   final VoidCallback onCheckout;
 
   const _CheckoutFooter({
-    required this.total,
+    required this.subtotal,
+    required this.taxRate,
+    required this.taxAmount,
+    required this.grandTotal,
     required this.disabled,
     required this.onCheckout,
   });
@@ -251,6 +266,7 @@ class _CheckoutFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final hasTax = taxRate > 0;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -266,16 +282,56 @@ class _CheckoutFooter extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (hasTax) ...[
+            Row(
+              children: [
+                Text(
+                  'Subtotal',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  formatRupiah(subtotal),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  'Pajak (${taxRate.toStringAsFixed(1)}%)',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  formatRupiah(taxAmount),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Text(
-                'Total',
+                'Total Bayar',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w900),
               ),
               const Spacer(),
               Text(
-                formatRupiah(total),
+                formatRupiah(grandTotal),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: scheme.primary,

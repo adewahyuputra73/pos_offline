@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:border_po/state/app_state.dart';
 import '../theme/dashboard_colors.dart';
 
-enum NavItem { dashboard, orders, transactions, inventory, hpp, settings }
+enum NavItem { dashboard, orders, shift, transactions, inventory, hpp, settings }
 
 /// Fixed 256-dp sidebar — mirrors the HTML `<aside class="w-64 fixed ...">`.
 ///
@@ -21,6 +23,8 @@ class SidebarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasActiveShift = context.watch<AppState>().hasActiveShift;
+
     return Container(
       width: 256,
       color: DC.stone100,
@@ -62,6 +66,17 @@ class SidebarWidget extends StatelessWidget {
                       label: 'ORDERS',
                       selected: selected == NavItem.orders,
                       onTap: () => onSelected(NavItem.orders),
+                    ),
+                    // ── SHIFT — dengan badge aktif ───────────────────────────
+                    _NavTile(
+                      icon: Icons.schedule_outlined,
+                      activeIcon: Icons.schedule_rounded,
+                      label: 'SHIFT',
+                      selected: selected == NavItem.shift,
+                      onTap: () => onSelected(NavItem.shift),
+                      badge: hasActiveShift
+                          ? _ActiveBadge()
+                          : null,
                     ),
                     _NavTile(
                       icon: Icons.history_edu_outlined,
@@ -114,12 +129,30 @@ class SidebarWidget extends StatelessWidget {
   }
 }
 
+/// Small green dot shown next to SHIFT when a shift is active.
+class _ActiveBadge extends StatelessWidget {
+  const _ActiveBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: const BoxDecoration(
+        color: Color(0xFF4ADE80),
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
 class _NavTile extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final Widget? badge;
 
   const _NavTile({
     required this.icon,
@@ -127,6 +160,7 @@ class _NavTile extends StatefulWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badge,
   });
 
   @override
@@ -179,16 +213,22 @@ class _NavTileState extends State<_NavTile> {
                   color: widget.selected ? DC.stone900 : DC.stone500,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  widget.label,
-                  style: manrope(
-                    // HTML: text-sm font-medium tracking-wide uppercase
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: widget.selected ? DC.stone900 : DC.stone500,
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: manrope(
+                      // HTML: text-sm font-medium tracking-wide uppercase
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                      color: widget.selected ? DC.stone900 : DC.stone500,
+                    ),
                   ),
                 ),
+                if (widget.badge != null) ...[
+                  const SizedBox(width: 8),
+                  widget.badge!,
+                ],
               ],
             ),
           ),

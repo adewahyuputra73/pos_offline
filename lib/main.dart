@@ -17,8 +17,16 @@ Future<void> main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  // Make the app completely fullscreen (hides top status bar and bottom navigation bar)
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // Make the app completely fullscreen and edge-to-edge
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  // Set system bars to transparent for a more "full layer" feel
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    statusBarIconBrightness: Brightness.dark,
+  ));
 
   await initializeDateFormatting('id_ID');
   final storage = await StorageService.init();

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import 'package:border_po/models/ingredient.dart';
 import 'package:border_po/state/app_state.dart';
@@ -16,13 +18,23 @@ class IngredientEditorSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => IngredientEditorSheet._withScroll(
+          existing: existing,
+          scrollController: scrollController,
         ),
-        child: IngredientEditorSheet(existing: existing),
       ),
     );
+  }
+
+  factory IngredientEditorSheet._withScroll({
+    Ingredient? existing,
+    required ScrollController scrollController,
+  }) {
+    return IngredientEditorSheet(existing: existing, key: ValueKey(scrollController));
   }
 
   @override
@@ -38,16 +50,21 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
   late TextEditingController _buyPriceCtrl;
   late TextEditingController _buyQtyCtrl;
 
+  String _formatInitial(int value) {
+    if (value == 0) return '';
+    return NumberFormat('#,###', 'id_ID').format(value);
+  }
+
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
     _unitCtrl = TextEditingController(text: widget.existing?.unit ?? 'gram');
-    _stockCtrl = TextEditingController(text: widget.existing?.stock.toString() ?? '');
+    _stockCtrl = TextEditingController(text: widget.existing != null ? _formatInitial(widget.existing!.stock) : '');
     
     // Reverse calculate for display if existing
     if (widget.existing != null) {
-      _buyPriceCtrl = TextEditingController(text: (widget.existing!.costPerUnit * 100).toString());
+      _buyPriceCtrl = TextEditingController(text: _formatInitial(widget.existing!.costPerUnit * 100));
       _buyQtyCtrl = TextEditingController(text: '100'); // Dummy 100 to show the math
     } else {
       _buyPriceCtrl = TextEditingController();
@@ -70,10 +87,10 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
 
     final name = _nameCtrl.text;
     final unit = _unitCtrl.text;
-    final stock = int.tryParse(_stockCtrl.text) ?? 0;
+    final stock = parseFormattedNumber(_stockCtrl.text);
     
-    final buyPrice = int.tryParse(_buyPriceCtrl.text) ?? 0;
-    final buyQty = int.tryParse(_buyQtyCtrl.text) ?? 1;
+    final buyPrice = parseFormattedNumber(_buyPriceCtrl.text);
+    final buyQty = parseFormattedNumber(_buyQtyCtrl.text);
     
     // Calculate cost per unit
     final costPerUnit = (buyPrice / (buyQty == 0 ? 1 : buyQty)).round();
@@ -105,13 +122,24 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
         color: DC.surfaceContainerLowest,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.all(24),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
+          padding: const EdgeInsets.all(24),
           children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: DC.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
             Row(
               children: [
                 Text(
@@ -189,6 +217,10 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
                     controller: _stockCtrl,
                     decoration: _inputDeco('Stok Saat Ini'),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                      ThousandSeparatorFormatter(),
+                    ],
                     validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
                   ),
                 ),
@@ -199,23 +231,35 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
             const SizedBox(height: 16),
 
             Text(
-              'Perhitungan Modal (Harga Pokok)',
+              'Hitung Modal per Satuan',
               style: manrope(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: DC.onSurface,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              'Contoh: Beli gula Rp 25.000, isinya 500 gram → modal Rp 50/gram',
+              style: manrope(
+                fontSize: 11,
+                color: DC.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
             const SizedBox(height: 16),
 
-            // Harga Beli & Kuantitas
+            // Harga Beli & Isi per Beli
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _buyPriceCtrl,
-                    decoration: _inputDeco('Harga Beli Total (Rp)'),
+                    decoration: _inputDeco('Harga Beli (Rp)'),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                      ThousandSeparatorFormatter(),
+                    ],
                     validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
                     onChanged: (_) => setState((){}), // trigger re-render for cost preview
                   ),
@@ -224,8 +268,12 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
                 Expanded(
                   child: TextFormField(
                     controller: _buyQtyCtrl,
-                    decoration: _inputDeco('Kuantitas Beli'),
+                    decoration: _inputDeco('Isi / Dapat Berapa?'),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                      ThousandSeparatorFormatter(),
+                    ],
                     validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
                     onChanged: (_) => setState((){}),
                   ),
@@ -237,8 +285,8 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
             // Preview Modal per satuan
             Builder(
               builder: (ctx) {
-                final bp = int.tryParse(_buyPriceCtrl.text) ?? 0;
-                final bq = int.tryParse(_buyQtyCtrl.text) ?? 1;
+                final bp = parseFormattedNumber(_buyPriceCtrl.text);
+                final bq = parseFormattedNumber(_buyQtyCtrl.text);
                 final unit = _unitCtrl.text.isEmpty ? 'satuan' : _unitCtrl.text;
                 final cost = (bp / (bq == 0 ? 1 : bq)).round();
 
@@ -249,7 +297,7 @@ class _IngredientEditorSheetState extends State<IngredientEditorSheet> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Modal dihitung: ${formatRupiah(cost)} / $unit',
+                    'Jadi modal: ${formatRupiah(cost)} per $unit',
                     style: manrope(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

@@ -115,14 +115,31 @@ class IngredientManagementBody extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (ctx, i) {
         final ing = ingredients[i];
-        final bool lowStock = ing.stock <= 10; // basic threshold
+        final bool outOfStock = ing.stock <= 0;
+        final bool lowStock = ing.stock > 0 && ing.stock <= 50;
+
+        // Stock status color
+        final Color stockColor = outOfStock
+            ? DC.error
+            : lowStock
+                ? const Color(0xFFE65100) // deep orange
+                : DC.tertiary;
+        final String stockLabel = outOfStock
+            ? 'HABIS'
+            : lowStock
+                ? 'STOK RENDAH'
+                : 'TERSEDIA';
 
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: DC.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: DC.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: outOfStock
+                  ? DC.error.withValues(alpha: 0.3)
+                  : DC.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Row(
             children: [
@@ -130,10 +147,15 @@ class IngredientManagementBody extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: DC.secondaryContainer,
+                  color: outOfStock
+                      ? DC.error.withValues(alpha: 0.1)
+                      : DC.secondaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.eco_outlined, color: DC.onSecondaryContainer),
+                child: Icon(
+                  outOfStock ? Icons.warning_amber_rounded : Icons.eco_outlined,
+                  color: outOfStock ? DC.error : DC.onSecondaryContainer,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -144,14 +166,35 @@ class IngredientManagementBody extends StatelessWidget {
                       ing.name,
                       style: manrope(fontSize: 16, fontWeight: FontWeight.w700, color: DC.onSurface),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Sisa Stok: ${ing.stock} ${ing.unit}',
-                      style: manrope(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: lowStock ? DC.error : DC.onSurfaceVariant,
-                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: stockColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            stockLabel,
+                            style: manrope(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: stockColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${ing.stock} ${ing.unit}',
+                          style: manrope(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: stockColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

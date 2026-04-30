@@ -249,6 +249,8 @@ class _StoreProfileCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _ProfileRow(label: 'Tagline', value: profile.tagline!),
                   ],
+                  const SizedBox(height: 8),
+                  _ProfileRow(label: 'Pajak (%)', value: profile.taxRate.toStringAsFixed(1)),
                 ],
               ),
             ),
@@ -277,6 +279,7 @@ class _StoreProfileCard extends StatelessWidget {
     final addressCtrl = TextEditingController(text: profile.address);
     final phoneCtrl = TextEditingController(text: profile.phone);
     final taglineCtrl = TextEditingController(text: profile.tagline ?? '');
+    final taxRateCtrl = TextEditingController(text: profile.taxRate.toString());
 
     showModalBottomSheet<void>(
       context: context,
@@ -314,7 +317,7 @@ class _StoreProfileCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Data ini akan tampil di header struk.',
+                  'Data ini akan tampil di header struk dan nota kasir.',
                   style: manrope(fontSize: 12, color: DC.onSurfaceVariant),
                 ),
                 const SizedBox(height: 20),
@@ -330,6 +333,12 @@ class _StoreProfileCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 _SettingsField(
                     controller: taglineCtrl, label: 'Tagline (opsional)'),
+                const SizedBox(height: 12),
+                _SettingsField(
+                  controller: taxRateCtrl,
+                  label: 'Pajak / PPN (%) (contoh: 11 atau 10.5)',
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
                 const SizedBox(height: 28),
                 GestureDetector(
                   onTap: () async {
@@ -340,6 +349,7 @@ class _StoreProfileCard extends StatelessWidget {
                       tagline: taglineCtrl.text.trim().isEmpty
                           ? null
                           : taglineCtrl.text.trim(),
+                      taxRate: double.tryParse(taxRateCtrl.text.trim()) ?? 0.0,
                     );
                     await state.updateStoreProfile(updated);
                     if (ctx.mounted) Navigator.of(ctx).pop();

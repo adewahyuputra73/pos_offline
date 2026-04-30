@@ -9,10 +9,13 @@ import '../components/sidebar_widget.dart';
 import '../components/summary_card.dart';
 import '../components/system_status_card.dart';
 import '../components/top_bar_widget.dart';
-import '../components/top_selling_card.dart';
+import 'package:border_po/features/dashboard/presentation/components/top_selling_card.dart';
+import 'package:border_po/features/dashboard/presentation/components/transactions_management_body.dart';
 import '../components/settings_body.dart';
 import '../components/checkout_body.dart';
 import '../components/ingredient_management_body.dart';
+import '../components/hpp_report_body.dart';
+import '../components/shift_body.dart';
 import '../theme/dashboard_colors.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -37,8 +40,8 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isWide = constraints.maxWidth >= 720;
-        final bool showPermanentSidebar = false; // User requested to always hide the permanent sidebar
+        final bool isWide = constraints.maxWidth >= 1024; // Use a higher threshold for permanent sidebar
+        final bool showPermanentSidebar = isWide; 
 
         return Scaffold(
           key: _scaffoldKey,
@@ -56,49 +59,47 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                     },
                   ),
                 ),
-          floatingActionButton: _DashFab(activeNav: _activeNav),
-          body: Row(
-            children: [
-              // ── Permanent sidebar on wide screens ──────────────────────────
-              if (showPermanentSidebar)
-                SidebarWidget(
-                  selected: _activeNav,
-                  onSelected: (n) => setState(() => _activeNav = n),
-                ),
-
-              // ── Main column ────────────────────────────────────────────────
-              Expanded(
-                child: Column(
+          floatingActionButton: null,
+          body: showPermanentSidebar
+              ? Row(
                   children: [
-                    if (_activeNav != NavItem.settings && _activeNav != NavItem.orders)
-                      TopBarWidget(
-                        title: _activeNav == NavItem.dashboard
-                            ? 'Coffee House Dashboard'
-                            : '',
-                        leading: showPermanentSidebar
-                            ? null
-                            : IconButton(
-                                icon: const Icon(Icons.menu_rounded,
-                                    color: DC.stone900),
-                                onPressed: () =>
-                                    _scaffoldKey.currentState?.openDrawer(),
-                              ),
-                      ),
-                    Expanded(
-                      child: (_activeNav == NavItem.settings || _activeNav == NavItem.orders)
-                          ? _buildBodyForNav(_activeNav, showPermanentSidebar)
-                          : SingleChildScrollView(
-                              padding: EdgeInsets.all(isWide ? 32 : 12),
-                              child: _buildBodyForNav(_activeNav, showPermanentSidebar),
-                            ),
+                    SidebarWidget(
+                      selected: _activeNav,
+                      onSelected: (n) => setState(() => _activeNav = n),
                     ),
+                    Expanded(child: _buildMainColumn(showPermanentSidebar, constraints.maxWidth)),
                   ],
-                ),
-              ),
-            ],
-          ),
+                )
+              : _buildMainColumn(showPermanentSidebar, constraints.maxWidth),
         );
       },
+    );
+  }
+
+  Widget _buildMainColumn(bool showPermanentSidebar, double maxWidth) {
+    return Column(
+      children: [
+        if (_activeNav != NavItem.settings && _activeNav != NavItem.orders && _activeNav != NavItem.shift)
+          TopBarWidget(
+            title: _activeNav == NavItem.dashboard
+                ? 'Coffee House Dashboard'
+                : '',
+            leading: showPermanentSidebar
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  ),
+          ),
+        Expanded(
+          child: _activeNav == NavItem.dashboard
+              ? SingleChildScrollView(
+                  padding: EdgeInsets.all(maxWidth >= 720 ? 32 : 16),
+                  child: const _DashboardBody(),
+                )
+              : _buildBodyForNav(_activeNav, showPermanentSidebar),
+        ),
+      ],
     );
   }
 
@@ -115,22 +116,34 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                   onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
         );
-      case NavItem.inventory:
-        return Column(
-          children: [
-            if (!showPermanentSidebar)
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: IconButton(
-                    icon: const Icon(Icons.menu_rounded, color: DC.stone900),
-                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                  ),
+      case NavItem.shift:
+        return ShiftBody(
+          leading: showPermanentSidebar
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
-              ),
-            const Expanded(child: IngredientManagementBody()),
-          ],
+        );
+      case NavItem.transactions:
+        return TransactionsManagementBody(
+          leading: showPermanentSidebar
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+        );
+      case NavItem.inventory:
+        return const IngredientManagementBody();
+      case NavItem.hpp:
+        return HppReportBody(
+          leading: showPermanentSidebar
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
         );
       case NavItem.settings:
         return SettingsBody(
@@ -145,54 +158,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
   }
 }
 
-// ── FAB ───────────────────────────────────────────────────────────────────────
 
-class _DashFab extends StatefulWidget {
-  final NavItem activeNav;
-  const _DashFab({required this.activeNav});
-
-  @override
-  State<_DashFab> createState() => _DashFabState();
-}
-
-class _DashFabState extends State<_DashFab> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () {
-          // Future: new order flow
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: DC.primary,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: DC.primary.withValues(alpha: 0.35),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: AnimatedRotation(
-            duration: const Duration(milliseconds: 200),
-            turns: _hovered ? 0.25 : 0,
-            child: const Icon(Icons.add_rounded,
-                color: DC.onPrimary, size: 32),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── Dashboard body — all sections ─────────────────────────────────────────────
 
@@ -206,11 +172,98 @@ class _DashboardBody extends StatelessWidget {
       children: const [
         _SummarySection(),
         SizedBox(height: 20),
+        _LowStockAlert(),
         _MainGridSection(),
         SizedBox(height: 20),
         _BottomSection(),
         SizedBox(height: 48), // FAB clearance
       ],
+    );
+  }
+}
+
+/// Shows a compact warning when any ingredients are low or out of stock.
+class _LowStockAlert extends StatelessWidget {
+  const _LowStockAlert();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final lowStock = state.lowStockIngredients(threshold: 50);
+    if (lowStock.isEmpty) return const SizedBox.shrink();
+
+    final outOfStock = lowStock.where((i) => i.stock <= 0).toList();
+    final running = lowStock.where((i) => i.stock > 0).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: outOfStock.isNotEmpty
+              ? DC.error.withValues(alpha: 0.08)
+              : const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: outOfStock.isNotEmpty
+                ? DC.error.withValues(alpha: 0.3)
+                : const Color(0xFFFFB74D),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.inventory_2_outlined,
+              color: outOfStock.isNotEmpty ? DC.error : const Color(0xFFE65100),
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    outOfStock.isNotEmpty
+                        ? '${outOfStock.length} Bahan Habis!'
+                        : '${running.length} Bahan Stok Rendah',
+                    style: manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: outOfStock.isNotEmpty ? DC.error : const Color(0xFFE65100),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: lowStock.map((ing) {
+                      final isOut = ing.stock <= 0;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isOut
+                              ? DC.error.withValues(alpha: 0.12)
+                              : const Color(0xFFE65100).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isOut ? '${ing.name} (HABIS)' : '${ing.name}: ${ing.stock} ${ing.unit}',
+                          style: manrope(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isOut ? DC.error : const Color(0xFFBF360C),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -260,7 +313,7 @@ class _SummarySection extends StatelessWidget {
             label: "PENDAPATAN KOTOR HARI INI",
             value: formatRupiah(state.todayRevenue),
             subtitle: InfoSubtitle(
-              text: '${state.todayCount} transaksi hari ini',
+              text: 'Termasuk pajak ${formatRupiah(state.todayTax)}',
               icon: Icons.receipt_long_rounded,
             ),
           ),
@@ -273,7 +326,7 @@ class _SummarySection extends StatelessWidget {
             label: 'KEUNTUNGAN BERSIH HARI INI',
             value: formatRupiah(state.todayProfit),
             subtitle: InfoSubtitle(
-              text: 'Berdasarkan modal otomatis',
+              text: 'Bersih setelah modal & pajak',
               icon: Icons.analytics_outlined,
             ),
           ),
@@ -328,6 +381,7 @@ class _MainGridSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return LayoutBuilder(
       builder: (ctx, c) {
         if (c.maxWidth < 720) {
@@ -339,9 +393,10 @@ class _MainGridSection extends StatelessWidget {
             ],
           );
         }
-        return const SizedBox(
-          height: 360,
-          child: Row(
+        final chartRowHeight = (screenHeight * 0.55).clamp(300.0, 450.0);
+        return SizedBox(
+          height: chartRowHeight,
+          child: const Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(flex: 2, child: SalesChartWidget()),
@@ -362,6 +417,7 @@ class _BottomSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return LayoutBuilder(
       builder: (ctx, c) {
         if (c.maxWidth < 640) {
@@ -374,7 +430,7 @@ class _BottomSection extends StatelessWidget {
           );
         }
         return const SizedBox(
-          height: 250,
+          height: 240, // Fixed reasonable height for the two cards to fill
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

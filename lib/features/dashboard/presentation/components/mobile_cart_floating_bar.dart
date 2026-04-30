@@ -8,13 +8,13 @@ import 'package:border_po/utils/formatters.dart';
 /// cart is empty via an [AnimatedSwitcher].
 class MobileCartFloatingBar extends StatelessWidget {
   final int totalQty;
-  final int total;
+  final int grandTotal;
   final VoidCallback onTap;
 
   const MobileCartFloatingBar({
     super.key,
     required this.totalQty,
-    required this.total,
+    required this.grandTotal,
     required this.onTap,
   });
 
@@ -40,7 +40,7 @@ class MobileCartFloatingBar extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: _BarContent(
                   totalQty: totalQty,
-                  total: total,
+                  grandTotal: grandTotal,
                   onTap: onTap,
                 ),
               ),
@@ -51,12 +51,12 @@ class MobileCartFloatingBar extends StatelessWidget {
 
 class _BarContent extends StatelessWidget {
   final int totalQty;
-  final int total;
+  final int grandTotal;
   final VoidCallback onTap;
 
   const _BarContent({
     required this.totalQty,
-    required this.total,
+    required this.grandTotal,
     required this.onTap,
   });
 
@@ -106,7 +106,7 @@ class _BarContent extends StatelessWidget {
                   children: [
                     Text('$totalQty item di keranjang', style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontSize: 12, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text(formatRupiah(total), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.4)),
+                    Text(formatRupiah(grandTotal), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.4)),
                   ],
                 ),
               ),

@@ -6,6 +6,11 @@ import 'package:border_po/models/product.dart';
 import 'package:border_po/state/app_state.dart';
 import 'package:border_po/utils/formatters.dart';
 import '../theme/dashboard_colors.dart';
+import '../pages/cash_payment_page.dart';
+import 'mobile_cart_floating_bar.dart';
+import 'cart_panel.dart';
+import '../pages/invoice_page.dart';
+import '../pages/qris_confirmation_page.dart';
 
 class CheckoutBody extends StatefulWidget {
   final Widget? leading;
@@ -26,42 +31,126 @@ class _CheckoutBodyState extends State<CheckoutBody> {
         final state = context.watch<AppState>();
         final isWide = constraints.maxWidth >= 800;
 
-        // On small screens, we might want a tab or bottom panel for the cart, 
-        // but for now we'll do a basic split screen that collapses gracefully.
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        return Stack(
           children: [
-            // Left Pane: Catalog
-            Expanded(
-              flex: 5,
-              child: _buildCatalog(context, state, constraints.maxWidth),
-            ),
-            
-            // Right Pane: Cart & Payment
-            if (isWide)
-              Container(
-                width: 380,
-                decoration: BoxDecoration(
-                  color: DC.surfaceContainerLowest,
-                  border: Border(
-                    left: BorderSide(
-                      color: DC.outlineVariant.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: DC.onSurface.withValues(alpha: 0.03),
-                      blurRadius: 20,
-                      offset: const Offset(-5, 0),
-                    ),
-                  ],
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Left Pane: Catalog
+                Expanded(
+                  flex: 5,
+                  child: _buildCatalog(context, state, constraints.maxWidth),
                 ),
-                child: _CheckoutSidebar(),
+                
+                // Right Pane: Cart & Payment
+                if (isWide)
+                  Container(
+                    width: 380,
+                    decoration: BoxDecoration(
+                      color: DC.surfaceContainerLowest,
+                      border: Border(
+                        left: BorderSide(
+                          color: DC.outlineVariant.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: DC.onSurface.withValues(alpha: 0.03),
+                          blurRadius: 20,
+                          offset: const Offset(-5, 0),
+                        ),
+                      ],
+                    ),
+                    child: _CheckoutSidebar(),
+                  ),
+              ],
+            ),
+            if (!isWide && state.cart.isNotEmpty)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: MobileCartFloatingBar(
+                  totalQty: state.cartItemCount,
+                  grandTotal: state.cartGrandTotal,
+                  onTap: () => _showCartBottomSheet(context, state),
+                ),
               ),
           ],
         );
       },
+    );
+  }
+
+  void _showCartBottomSheet(BuildContext context, AppState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: DC.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: DC.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: CartPanel(
+                  lines: state.cart,
+                  onIncrement: (id) => state.incrementCartLine(id),
+                  onDecrement: (id) => state.decrementCartLine(id),
+                  onClear: () {
+                    state.clearCart();
+                    Navigator.pop(context);
+                  },
+                  onCheckout: () {
+                    Navigator.pop(context);
+                    // Show payment picker or just sidebar-like checkout
+                    _showPaymentBottomSheet(context, state);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentBottomSheet(BuildContext context, AppState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: DC.surfaceContainerLowest,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: _CheckoutSidebar(),
+        ),
+      ),
     );
   }
 
@@ -315,74 +404,125 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
     if (state.cart.isEmpty) return;
     
     if (_paymentMethod == 'cash') {
-      try {
-        await state.checkoutCash(paidAmount: state.cartTotal); // Assuming exact amount for now
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pembayaran Tunai Berhasil!')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: \$e')),
-          );
-        }
+      final paidAmount = await Navigator.of(context).push<int>(
+        MaterialPageRoute(
+          builder: (_) => CashPaymentPage(totalToPay: state.cartGrandTotal),
+        ),
+      );
+
+      if (paidAmount != null && mounted) {
+        _processCheckout(state, () => state.checkoutCash(paidAmount: paidAmount));
       }
     } else if (_paymentMethod == 'qris') {
-      try {
-        await state.checkoutQris(imageBase64: ''); // External QRIS, no image needed
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pembayaran QRIS Eksternal Berhasil!')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: \$e')),
-          );
-        }
+      final confirmed = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => QrisConfirmationPage(totalToPay: state.cartGrandTotal),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        _processCheckout(state, () => state.checkoutQris(imageBase64: ''));
       }
+    }
+  }
+
+  Future<void> _processCheckout(AppState state, Future<void> Function() checkoutFn) async {
+    // Show Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: DC.surfaceContainerLowest,
+      builder: (ctx) => Scaffold(
+        backgroundColor: DC.surfaceContainerLowest,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: DC.primary),
+              const SizedBox(height: 24),
+              Text(
+                'Memproses pembayaran...',
+                style: manrope(fontSize: 16, fontWeight: FontWeight.w700, color: DC.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Simulate slight network/processing delay for UX
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      // Keep track of the transaction ID before clearing cart to show receipt
+      final nextId = 'TRX-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}'; // Just predicting ID if needed, or better, state should return it.
+      // Wait, checkout method creates the transaction. Let's get the latest transaction after.
+
+      await checkoutFn();
+
+      if (!mounted) return;
+      
+      // Close Loading
+      Navigator.of(context).pop();
+
+      // Show Receipt — transactions getter sorts newest first, so .first is the latest
+      final latestTx = state.transactions.first;
+      
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => InvoicePage(record: latestTx),
+        ),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      // Close Loading
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Column(
       children: [
-        // Sub-header Current Order
+        // Sub-header Current Order (fixed at top)
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pesanan Saat Ini',
-                    style: manrope(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: DC.onSurface,
-                      letterSpacing: -0.5,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pesanan Saat Ini',
+                      style: manrope(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: DC.onSurface,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '\${state.cartItemCount} Items',
-                    style: manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: DC.onSurfaceVariant,
-                      letterSpacing: 0.5,
+                    const SizedBox(height: 4),
+                    Text(
+                      '${state.cartItemCount} Items',
+                      style: manrope(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: DC.onSurfaceVariant,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (state.cart.isNotEmpty)
                 TextButton(
@@ -406,110 +546,219 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
           ),
         ),
 
-        // Cart items list
+        // Everything else scrolls
         Expanded(
-          child: state.cart.isEmpty
-              ? _buildEmptyCart()
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: state.cart.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final line = state.cart[index];
-                    return _buildCartItem(context, line);
-                  },
-                ),
-        ),
-
-        // Payment Panel
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: DC.surfaceContainerLowest,
-            boxShadow: [
-              BoxShadow(
-                color: DC.onSurface.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: ListView(
+            padding: EdgeInsets.only(bottom: bottomPadding),
             children: [
-              Text(
-                'METODE PEMBAYARAN',
-                style: manrope(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: DC.onSurfaceVariant,
+              // Cart items
+              if (state.cart.isEmpty)
+                SizedBox(
+                  height: 200,
+                  child: _buildEmptyCart(),
+                )
+              else
+                ...state.cart.map((line) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: _buildCartItem(context, line),
+                )),
+
+              // Stock warning
+              if (state.cart.isNotEmpty && state.insufficientStockWarnings.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFB74D)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Color(0xFFE65100), size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Stok Bahan Tidak Cukup',
+                                style: manrope(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFE65100),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              ...state.insufficientStockWarnings.map((w) => Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  '• $w',
+                                  style: manrope(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFBF360C),
+                                  ),
+                                ),
+                              )),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPaymentMethodButton(
-                      id: 'cash',
-                      icon: Icons.payments_outlined,
-                      label: 'Tunai',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildPaymentMethodButton(
-                      id: 'qris',
-                      icon: Icons.qr_code_2_rounded,
-                      label: 'QRIS',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total',
-                    style: manrope(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: DC.onSurface,
-                    ),
-                  ),
-                  Text(
-                    formatRupiah(state.cartTotal),
-                    style: manrope(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: DC.primary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
+
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: state.cart.isEmpty ? null : () => _onPay(state),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: DC.primary,
-                  foregroundColor: DC.onPrimary,
-                  disabledBackgroundColor: DC.surfaceContainerHigh,
-                  disabledForegroundColor: DC.onSurfaceVariant,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
+
+              // Payment Panel
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: DC.surfaceContainerLowest,
+                  boxShadow: [
+                    BoxShadow(
+                      color: DC.onSurface.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  _paymentMethod == 'cash' ? 'Kumpulkan Pembayaran' : 'Konfirmasi QRIS',
-                  style: manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'METODE PEMBAYARAN',
+                      style: manrope(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                        color: DC.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildPaymentMethodButton(
+                            id: 'cash',
+                            icon: Icons.payments_outlined,
+                            label: 'Tunai',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildPaymentMethodButton(
+                            id: 'qris',
+                            icon: Icons.qr_code_2_rounded,
+                            label: 'QRIS',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    if (state.storeProfile.taxRate > 0) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Subtotal',
+                            style: manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: DC.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            formatRupiah(state.cartTotal),
+                            style: manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: DC.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Pajak (${state.storeProfile.taxRate}%)',
+                            style: manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: DC.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            formatRupiah(state.cartTaxAmount),
+                            style: manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: DC.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1),
+                      const SizedBox(height: 12),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Total Bayar',
+                            style: manrope(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: DC.onSurface,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            formatRupiah(state.cartGrandTotal),
+                            style: manrope(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: DC.primary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: state.cart.isEmpty ? null : () => _onPay(state),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DC.primary,
+                        foregroundColor: DC.onPrimary,
+                        disabledBackgroundColor: DC.surfaceContainerHigh,
+                        disabledForegroundColor: DC.onSurfaceVariant,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        _paymentMethod == 'cash' ? 'Kumpulkan Pembayaran' : 'Konfirmasi QRIS',
+                        style: manrope(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -666,7 +915,7 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
                   padding: EdgeInsets.zero,
                 ),
                 Text(
-                  '\${line.quantity}',
+                  '${line.quantity}',
                   style: manrope(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,

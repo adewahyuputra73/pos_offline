@@ -19,6 +19,34 @@ class RecentTransactionsWidget extends StatelessWidget {
       builder: (context, constraints) {
         final bool compact = constraints.maxWidth < 360;
         final double pad = compact ? 16 : 32;
+        final bool hasBoundedHeight = constraints.maxHeight.isFinite;
+
+        Widget transactionContent;
+        if (recent.isEmpty) {
+          transactionContent = _EmptyState(compact: compact);
+        } else if (hasBoundedHeight) {
+          // In bounded context, make it scrollable
+          transactionContent = Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: recent.length,
+              itemBuilder: (context, index) => Padding(
+                padding: EdgeInsets.only(bottom: compact ? 12 : 20),
+                child: _TxRow(tx: recent[index]),
+              ),
+            ),
+          );
+        } else {
+          // In unbounded context, show inline
+          transactionContent = Column(
+            children: recent.map(
+              (tx) => Padding(
+                padding: EdgeInsets.only(bottom: compact ? 12 : 20),
+                child: _TxRow(tx: tx),
+              ),
+            ).toList(),
+          );
+        }
 
         return Container(
           padding: EdgeInsets.all(pad),
@@ -35,7 +63,7 @@ class RecentTransactionsWidget extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
             children: [
               Text(
                 'Penjualan Terbaru',
@@ -47,15 +75,7 @@ class RecentTransactionsWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: compact ? 16 : 24),
-              if (recent.isEmpty)
-                _EmptyState(compact: compact)
-              else
-                ...recent.map(
-                  (tx) => Padding(
-                    padding: EdgeInsets.only(bottom: compact ? 12 : 20),
-                    child: _TxRow(tx: tx),
-                  ),
-                ),
+              transactionContent,
             ],
           ),
         );

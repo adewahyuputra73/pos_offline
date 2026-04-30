@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
 import '../models/ingredient.dart';
 import '../models/product.dart';
+import '../models/shift.dart';
 import '../models/store_profile.dart';
 import '../models/transaction.dart';
 
@@ -18,6 +19,7 @@ class StorageService {
   static const _kCategories = 'border_po.categories';
   static const _kTransactions = 'border_po.transactions';
   static const _kStoreProfile = 'border_po.store_profile';
+  static const _kShifts = 'border_po.shifts';
 
   final SharedPreferences _prefs;
 
@@ -92,6 +94,22 @@ class StorageService {
     await _prefs.setString(_kTransactions, raw);
   }
 
+  // ---------------- Shifts ----------------
+
+  List<Shift> loadShifts() {
+    final raw = _prefs.getString(_kShifts);
+    if (raw == null || raw.isEmpty) return <Shift>[];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list
+        .map((e) => Shift.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveShifts(List<Shift> shifts) async {
+    final raw = jsonEncode(shifts.map((e) => e.toJson()).toList());
+    await _prefs.setString(_kShifts, raw);
+  }
+
   // ---------------- Maintenance ----------------
 
   Future<void> clearTransactions() async {
@@ -104,6 +122,7 @@ class StorageService {
     await _prefs.remove(_kCategories);
     await _prefs.remove(_kTransactions);
     await _prefs.remove(_kStoreProfile);
+    await _prefs.remove(_kShifts);
   }
 
   // ---------------- Store Profile ----------------

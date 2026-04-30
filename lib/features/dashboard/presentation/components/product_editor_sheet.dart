@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import 'package:border_po/models/product.dart';
 import 'package:border_po/models/category.dart';
 import 'package:border_po/state/app_state.dart';
+import 'package:border_po/utils/formatters.dart';
 import '../theme/dashboard_colors.dart';
-
 import 'package:border_po/models/ingredient.dart';
 
 /// Form dialog (bottom sheet) for adding and editing products.
@@ -20,15 +21,21 @@ class ProductEditorSheet {
     final isEdit = existing != null;
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     final priceCtrl = TextEditingController(
-      text: existing != null ? existing.price.toString() : '',
+      text:
+          existing != null
+              ? NumberFormat('#,###', 'id_ID').format(existing.price)
+              : '',
     );
     final manualCostCtrl = TextEditingController(
-      text: existing?.manualCost != null ? existing!.manualCost.toString() : '',
+      text:
+          existing?.manualCost != null
+              ? NumberFormat('#,###', 'id_ID').format(existing!.manualCost!)
+              : '',
     );
-    
+
     String? selectedCategoryId = existing?.categoryId;
     String? currentImageBase64 = existing?.imageBase64;
-    
+
     // Copy the recipe so we can edit it locally
     List<RecipeItem> currentRecipe = List.from(existing?.recipe ?? []);
 
@@ -43,7 +50,7 @@ class ProductEditorSheet {
         return StatefulBuilder(
           builder: (ctx, setSheet) {
             final viewInsets = MediaQuery.of(ctx).viewInsets;
-            
+
             Future<void> pickImage() async {
               final picker = ImagePicker();
               final picked = await picker.pickImage(
@@ -63,61 +70,88 @@ class ProductEditorSheet {
 
             void addRecipeItem() async {
               if (state.ingredients.isEmpty) {
-                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Belum ada data bahan baku.')));
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Belum ada data bahan baku.')),
+                );
                 return;
               }
-              
+
               String? selectedIngId = state.ingredients.first.id;
               final qtyCtrl = TextEditingController(text: '1');
-              
+
               final result = await showDialog<RecipeItem>(
                 context: ctx,
-                builder: (dCtx) => StatefulBuilder(
-                  builder: (dCtx, setDialog) => AlertDialog(
-                    backgroundColor: DC.surfaceContainerLowest,
-                    title: const Text('Tambah Bahan'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          value: selectedIngId,
-                          decoration: InputDecoration(
-                            labelText: 'Bahan Baku',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                builder:
+                    (dCtx) => StatefulBuilder(
+                      builder:
+                          (dCtx, setDialog) => AlertDialog(
+                            backgroundColor: DC.surfaceContainerLowest,
+                            title: const Text('Tambah Bahan'),
+                            scrollable: true,
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  DropdownButtonFormField<String>(
+                                    value: selectedIngId,
+                                    decoration: InputDecoration(
+                                      labelText: 'Bahan Baku',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    items:
+                                        state.ingredients
+                                            .map(
+                                              (ing) => DropdownMenuItem(
+                                                value: ing.id,
+                                                child: Text(
+                                                  '${ing.name} (${ing.unit})',
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                    onChanged:
+                                        (v) => setDialog(() => selectedIngId = v),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: qtyCtrl,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: 'Jumlah Pakai',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dCtx).pop(),
+                                child: const Text('Batal'),
+                              ),
+                              FilledButton(
+                                onPressed: () {
+                                  final qty = int.tryParse(qtyCtrl.text) ?? 1;
+                                  if (selectedIngId != null) {
+                                    Navigator.of(dCtx).pop(
+                                      RecipeItem(
+                                        ingredientId: selectedIngId!,
+                                        quantity: qty,
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text('Tambah'),
+                              ),
+                            ],
                           ),
-                          items: state.ingredients.map((ing) => DropdownMenuItem(
-                            value: ing.id,
-                            child: Text('${ing.name} (${ing.unit})'),
-                          )).toList(),
-                          onChanged: (v) => setDialog(() => selectedIngId = v),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: qtyCtrl,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: 'Kuantitas',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        )
-                      ],
                     ),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.of(dCtx).pop(), child: const Text('Batal')),
-                      FilledButton(
-                        onPressed: () {
-                          final qty = int.tryParse(qtyCtrl.text) ?? 1;
-                          if (selectedIngId != null) {
-                            Navigator.of(dCtx).pop(RecipeItem(ingredientId: selectedIngId!, quantity: qty));
-                          }
-                        },
-                        child: const Text('Tambah'),
-                      ),
-                    ],
-                  ),
-                )
               );
-              
+
               if (result != null) {
                 setSheet(() {
                   currentRecipe.add(result);
@@ -127,9 +161,12 @@ class ProductEditorSheet {
 
             // Calculate auto cost
             int autoCost = 0;
-            for(final item in currentRecipe) {
-               final ing = state.ingredients.where((i) => i.id == item.ingredientId).firstOrNull;
-               if(ing != null) autoCost += (ing.costPerUnit * item.quantity);
+            for (final item in currentRecipe) {
+              final ing =
+                  state.ingredients
+                      .where((i) => i.id == item.ingredientId)
+                      .firstOrNull;
+              if (ing != null) autoCost += (ing.costPerUnit * item.quantity);
             }
 
             return Padding(
@@ -178,26 +215,30 @@ class ProductEditorSheet {
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: currentImageBase64 != null
-                              ? Image.memory(
-                                  base64Decode(currentImageBase64!),
-                                  fit: BoxFit.cover,
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.add_a_photo_outlined, color: DC.onSurfaceVariant),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Foto',
-                                      style: manrope(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                          child:
+                              currentImageBase64 != null
+                                  ? Image.memory(
+                                    base64Decode(currentImageBase64!),
+                                    fit: BoxFit.cover,
+                                  )
+                                  : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_a_photo_outlined,
                                         color: DC.onSurfaceVariant,
                                       ),
-                                    ),
-                                  ],
-                                ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Foto',
+                                        style: manrope(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: DC.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                         ),
                       ),
                     ),
@@ -218,11 +259,12 @@ class ProductEditorSheet {
                       label: 'Harga Jual (Rp)',
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
+                        FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                        ThousandSeparatorFormatter(),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Category selector
                     if (state.categories.isEmpty)
                       Container(
@@ -256,13 +298,18 @@ class ProductEditorSheet {
                             _buildCategoryChip(
                               label: 'Tanpa kategori',
                               selected: selectedCategoryId == null,
-                              onTap: () => setSheet(() => selectedCategoryId = null),
+                              onTap:
+                                  () =>
+                                      setSheet(() => selectedCategoryId = null),
                             ),
                             ...state.categories.map(
                               (c) => _buildCategoryChip(
                                 label: c.name,
                                 selected: selectedCategoryId == c.id,
-                                onTap: () => setSheet(() => selectedCategoryId = c.id),
+                                onTap:
+                                    () => setSheet(
+                                      () => selectedCategoryId = c.id,
+                                    ),
                               ),
                             ),
                           ],
@@ -272,12 +319,12 @@ class ProductEditorSheet {
                     const SizedBox(height: 24),
                     const Divider(),
                     const SizedBox(height: 16),
-                    
+
                     // Recipe Section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                         Text(
+                        Text(
                           'Resep / Bahan Baku',
                           style: manrope(
                             fontWeight: FontWeight.w700,
@@ -288,37 +335,50 @@ class ProductEditorSheet {
                           onPressed: addRecipeItem,
                           icon: const Icon(Icons.add),
                           label: const Text('Tambah Bahan'),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    
+
                     if (currentRecipe.isEmpty)
-                       Text(
-                         'Tidak ada resep. Gunakan modal manual jika diperlukan.',
-                         style: manrope(fontSize: 12, color: DC.onSurfaceVariant),
-                       )
-                    else 
-                       ListView.builder(
-                         shrinkWrap: true,
-                         physics: const NeverScrollableScrollPhysics(),
-                         itemCount: currentRecipe.length,
-                         itemBuilder: (ctx, i) {
-                           final item = currentRecipe[i];
-                           final ing = state.ingredients.where((ig) => ig.id == item.ingredientId).firstOrNull;
-                           return ListTile(
-                             contentPadding: EdgeInsets.zero,
-                             dense: true,
-                             title: Text(ing?.name ?? 'Unknown Ingredient'),
-                             subtitle: Text('${item.quantity} ${ing?.unit ?? ''}  (@ Rp${ing?.costPerUnit ?? 0})'),
-                             trailing: IconButton(
-                               icon: const Icon(Icons.delete_outline, color: DC.error),
-                               onPressed: () => setSheet(() => currentRecipe.removeAt(i)),
-                             ),
-                           );
-                         },
-                       ),
-                       
+                      Text(
+                        'Tidak ada resep. Gunakan modal manual jika diperlukan.',
+                        style: manrope(
+                          fontSize: 12,
+                          color: DC.onSurfaceVariant,
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentRecipe.length,
+                        itemBuilder: (ctx, i) {
+                          final item = currentRecipe[i];
+                          final ing =
+                              state.ingredients
+                                  .where((ig) => ig.id == item.ingredientId)
+                                  .firstOrNull;
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            title: Text(ing?.name ?? 'Unknown Ingredient'),
+                            subtitle: Text(
+                              '${item.quantity} ${ing?.unit ?? ''}  (@ Rp${ing?.costPerUnit ?? 0})',
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: DC.error,
+                              ),
+                              onPressed:
+                                  () =>
+                                      setSheet(() => currentRecipe.removeAt(i)),
+                            ),
+                          );
+                        },
+                      ),
+
                     const SizedBox(height: 16),
                     if (currentRecipe.isEmpty)
                       _StyledField(
@@ -326,16 +386,23 @@ class ProductEditorSheet {
                         label: 'Modal Manual (Rp) - Opsional',
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                          ThousandSeparatorFormatter(),
                         ],
                       )
                     else
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: DC.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                          color: DC.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Text(
                           'Total Modal Otomatis: Rp $autoCost',
-                          style: manrope(fontWeight: FontWeight.w700, color: DC.onPrimaryContainer),
+                          style: manrope(
+                            fontWeight: FontWeight.w700,
+                            color: DC.onPrimaryContainer,
+                          ),
                         ),
                       ),
 
@@ -345,9 +412,16 @@ class ProductEditorSheet {
                     GestureDetector(
                       onTap: () async {
                         final name = nameCtrl.text.trim();
-                        final price = int.tryParse(priceCtrl.text.trim()) ?? 0;
-                        final mCost = currentRecipe.isEmpty ? (int.tryParse(manualCostCtrl.text.trim()) ?? 0) : null;
-                        
+                        final price = parseFormattedNumber(
+                          priceCtrl.text.trim(),
+                        );
+                        final mCost =
+                            currentRecipe.isEmpty
+                                ? parseFormattedNumber(
+                                  manualCostCtrl.text.trim(),
+                                )
+                                : null;
+
                         if (name.isEmpty || price <= 0) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             SnackBar(
@@ -480,8 +554,10 @@ class _StyledField extends StatelessWidget {
             color: DC.onSurfaceVariant.withValues(alpha: 0.7),
           ),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
