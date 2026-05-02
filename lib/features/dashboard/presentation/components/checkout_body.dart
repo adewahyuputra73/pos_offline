@@ -45,7 +45,7 @@ class _CheckoutBodyState extends State<CheckoutBody> {
                 // Right Pane: Cart & Payment
                 if (isWide)
                   Container(
-                    width: 380,
+                    width: 384,
                     decoration: BoxDecoration(
                       color: DC.surfaceContainerLowest,
                       border: Border(
@@ -358,13 +358,8 @@ class _CheckoutBodyState extends State<CheckoutBody> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: isActive ? DC.primary : DC.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isActive
-                  ? DC.primary
-                  : DC.outlineVariant.withValues(alpha: 0.2),
-            ),
+            color: isActive ? DC.primary : DC.surfaceContainer,
+            borderRadius: BorderRadius.circular(50),
           ),
           child: Center(
             child: Text(
@@ -465,17 +460,8 @@ class _CheckoutBodyState extends State<CheckoutBody> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      formatRupiah(product.price),
-                      style: manrope(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: DC.primary,
-                      ),
-                    ),
                     if (cat != null) ...[
-                      const Spacer(),
+                      const SizedBox(height: 2),
                       Text(
                         cat.name.toUpperCase(),
                         style: manrope(
@@ -487,7 +473,34 @@ class _CheckoutBodyState extends State<CheckoutBody> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ]
+                    ],
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          formatRupiah(product.price),
+                          style: manrope(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: DC.primary,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: DC.primaryFixedDim.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.add_shopping_cart,
+                            size: 16,
+                            color: DC.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -668,18 +681,21 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
     return Column(
       children: [
         // Sub-header Current Order (fixed at top)
-        Padding(
+        Container(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: DC.outlineVariant.withValues(alpha: 0.2))),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Pesanan Saat Ini',
+                      'Order Summary',
                       style: manrope(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -701,22 +717,10 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
                 ),
               ),
               if (state.cart.isNotEmpty)
-                TextButton(
+                IconButton(
                   onPressed: () => state.clearCart(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: DC.error,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Hapus Semua',
-                    style: manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  icon: const Icon(Icons.delete_sweep, color: DC.onSurfaceVariant),
+                  tooltip: 'Hapus Semua',
                 ),
             ],
           ),
@@ -1061,51 +1065,55 @@ class _CheckoutSidebarState extends State<_CheckoutSidebar> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  formatRupiah(line.product.price),
-                  style: manrope(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: DC.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Quantity controls
-          Container(
-            decoration: BoxDecoration(
-              color: DC.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove, size: 16),
-                  onPressed: () => context
-                      .read<AppState>()
-                      .decrementCartLine(line.product.id),
-                  color: DC.onSurfaceVariant,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  padding: EdgeInsets.zero,
-                ),
-                Text(
-                  '${line.quantity}',
-                  style: manrope(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: DC.onSurface,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 16),
-                  onPressed: () => context
-                      .read<AppState>()
-                      .incrementCartLine(line.product.id),
-                  color: DC.onSurfaceVariant,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  padding: EdgeInsets.zero,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Quantity controls inside info block
+                    Container(
+                      decoration: BoxDecoration(
+                        color: DC.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove, size: 16),
+                            onPressed: () => context
+                                .read<AppState>()
+                                .decrementCartLine(line.product.id),
+                            color: DC.primary,
+                            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                            padding: EdgeInsets.zero,
+                          ),
+                          Text(
+                            '${line.quantity}',
+                            style: manrope(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: DC.onSurface,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add, size: 16),
+                            onPressed: () => context
+                                .read<AppState>()
+                                .incrementCartLine(line.product.id),
+                            color: DC.primary,
+                            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      formatRupiah(line.product.price),
+                      style: manrope(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: DC.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

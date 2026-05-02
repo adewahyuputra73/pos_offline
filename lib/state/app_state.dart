@@ -37,6 +37,15 @@ class ProductHppSummary {
 
   int get totalProfit => totalRevenue - totalCogs;
   double get marginPercent => totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0.0;
+
+  /// HPP per unit (per gelas/item)
+  int get cogsPerUnit => totalQuantitySold > 0 ? (totalCogs / totalQuantitySold).round() : 0;
+
+  /// Harga jual rata-rata per unit
+  int get pricePerUnit => totalQuantitySold > 0 ? (totalRevenue / totalQuantitySold).round() : 0;
+
+  /// Profit per unit
+  int get profitPerUnit => pricePerUnit - cogsPerUnit;
 }
 
 /// Single source of truth for the whole app.
@@ -660,18 +669,21 @@ class AppState extends ChangeNotifier {
 
   // ---------------- Maintenance ----------------
 
-  Future<void> deleteAllTransactions() async {
-    _transactions = [];
+  Future<void> clearTransactions() async {
     await _storage.clearTransactions();
+    _transactions.clear();
     notifyListeners();
   }
 
   Future<void> clearAllData() async {
-    _products = [];
-    _categories = [];
-    _transactions = [];
-    _cart.clear();
     await _storage.clearAll();
+    _ingredients.clear();
+    _products.clear();
+    _categories.clear();
+    _transactions.clear();
+    _shifts.clear();
+    _storeProfile = const StoreProfile();
+    _cart.clear();
     notifyListeners();
   }
 }

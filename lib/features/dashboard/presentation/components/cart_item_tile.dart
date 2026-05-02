@@ -66,7 +66,7 @@ class CartItemTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // Name + price
+          // Name + price + stepper
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,24 +79,26 @@ class CartItemTile extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  formatRupiah(line.product.price),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w600,
-                  ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _QtyStepper(
+                      quantity: line.quantity,
+                      onIncrement: onIncrement,
+                      onDecrement: onDecrement,
+                    ),
+                    Text(
+                      formatRupiah(line.product.price),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-
-          // +/- stepper
-          _QtyStepper(
-            quantity: line.quantity,
-            onIncrement: onIncrement,
-            onDecrement: onDecrement,
           ),
         ],
       ),
@@ -120,8 +122,8 @@ class _QtyStepper extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -134,13 +136,13 @@ class _QtyStepper extends StatelessWidget {
             danger: quantity == 1,
           ),
           SizedBox(
-            width: 28,
+            width: 24,
             child: Text(
               '$quantity',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
               ),
             ),
           ),

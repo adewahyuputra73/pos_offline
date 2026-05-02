@@ -88,15 +88,24 @@ class _HppReportBodyState extends State<HppReportBody> {
           cmp = a.totalQuantitySold.compareTo(b.totalQuantitySold);
           break;
         case 2:
-          cmp = a.totalRevenue.compareTo(b.totalRevenue);
+          cmp = a.pricePerUnit.compareTo(b.pricePerUnit);
           break;
         case 3:
-          cmp = a.totalCogs.compareTo(b.totalCogs);
+          cmp = a.cogsPerUnit.compareTo(b.cogsPerUnit);
           break;
         case 4:
-          cmp = a.totalProfit.compareTo(b.totalProfit);
+          cmp = a.profitPerUnit.compareTo(b.profitPerUnit);
           break;
         case 5:
+          cmp = a.totalRevenue.compareTo(b.totalRevenue);
+          break;
+        case 6:
+          cmp = a.totalCogs.compareTo(b.totalCogs);
+          break;
+        case 7:
+          cmp = a.totalProfit.compareTo(b.totalProfit);
+          break;
+        case 8:
           cmp = a.marginPercent.compareTo(b.marginPercent);
           break;
       }
@@ -310,34 +319,67 @@ class _HppReportBodyState extends State<HppReportBody> {
             scrollDirection: Axis.horizontal,
             child: DataTable(
               headingTextStyle: manrope(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: DC.onSurfaceVariant,
                 letterSpacing: 0.5,
               ),
               dataTextStyle: manrope(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: DC.onSurface,
               ),
               sortColumnIndex: _sortColumnIndex,
               sortAscending: _sortAscending,
+              columnSpacing: 24,
               columns: [
                 DataColumn(label: const Text('PRODUK'), onSort: _onSort),
-                DataColumn(label: const Text('QTY'), numeric: true, onSort: _onSort),
-                DataColumn(label: const Text('PENDAPATAN'), numeric: true, onSort: _onSort),
+                DataColumn(label: const Text('TERJUAL'), numeric: true, onSort: _onSort),
+                // ── Per Unit columns ─────────────────────────────
+                DataColumn(label: const Text('HARGA/UNIT'), numeric: true, onSort: _onSort),
+                DataColumn(label: const Text('HPP/UNIT'), numeric: true, onSort: _onSort),
+                DataColumn(label: const Text('PROFIT/UNIT'), numeric: true, onSort: _onSort),
+                // ── Total columns ────────────────────────────────
+                DataColumn(label: const Text('TOTAL PENDAPATAN'), numeric: true, onSort: _onSort),
                 DataColumn(label: const Text('TOTAL HPP'), numeric: true, onSort: _onSort),
-                DataColumn(label: const Text('LABA KOTOR'), numeric: true, onSort: _onSort),
-                DataColumn(label: const Text('MARGIN %'), numeric: true, onSort: _onSort),
+                DataColumn(label: const Text('TOTAL LABA'), numeric: true, onSort: _onSort),
+                DataColumn(label: const Text('MARGIN'), numeric: true, onSort: _onSort),
               ],
               rows: data.map((p) {
                 final marginColor = _getMarginColor(p.marginPercent);
+                final profitColor = p.profitPerUnit > 0 ? DC.tertiary : DC.error;
                 return DataRow(
                   cells: [
                     DataCell(Text(p.productName, style: manrope(fontWeight: FontWeight.w700))),
-                    DataCell(Text('${p.totalQuantitySold}')),
-                    DataCell(Text(formatRupiah(p.totalRevenue))),
-                    DataCell(Text(formatRupiah(p.totalCogs), style: manrope(color: DC.error))),
+                    DataCell(Text('${p.totalQuantitySold}x')),
+                    // Per-unit cells
+                    DataCell(Text(formatRupiah(p.pricePerUnit))),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: DC.error.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          formatRupiah(p.cogsPerUnit),
+                          style: manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: DC.error,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        formatRupiah(p.profitPerUnit),
+                        style: manrope(fontWeight: FontWeight.w700, color: profitColor),
+                      ),
+                    ),
+                    // Total cells
+                    DataCell(Text(formatRupiah(p.totalRevenue), style: manrope(color: DC.onSurfaceVariant))),
+                    DataCell(Text(formatRupiah(p.totalCogs), style: manrope(color: DC.error.withValues(alpha: 0.7)))),
                     DataCell(Text(formatRupiah(p.totalProfit), style: manrope(fontWeight: FontWeight.w700, color: DC.tertiary))),
                     DataCell(
                       Container(

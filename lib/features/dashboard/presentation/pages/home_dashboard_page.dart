@@ -82,7 +82,9 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         if (_activeNav != NavItem.settings && _activeNav != NavItem.orders && _activeNav != NavItem.shift)
           TopBarWidget(
             title: _activeNav == NavItem.dashboard
-                ? 'Coffee House Dashboard'
+                ? context.watch<AppState>().storeProfile.storeName.isEmpty 
+                    ? 'Dashboard' 
+                    : context.watch<AppState>().storeProfile.storeName
                 : '',
             leading: showPermanentSidebar
                 ? null
@@ -126,25 +128,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                 ),
         );
       case NavItem.transactions:
-        return TransactionsManagementBody(
-          leading: showPermanentSidebar
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-        );
+        return const TransactionsManagementBody();
       case NavItem.inventory:
         return const IngredientManagementBody();
       case NavItem.hpp:
-        return HppReportBody(
-          leading: showPermanentSidebar
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.menu_rounded, color: DC.stone900),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-        );
+        return const HppReportBody();
       case NavItem.settings:
         return SettingsBody(
           leading: showPermanentSidebar

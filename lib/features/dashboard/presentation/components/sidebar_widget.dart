@@ -27,7 +27,14 @@ class SidebarWidget extends StatelessWidget {
 
     return Container(
       width: 256,
-      color: DC.stone100,
+      decoration: BoxDecoration(
+        color: DC.surfaceContainerLowest,
+        border: Border(
+          right: BorderSide(
+            color: DC.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +43,9 @@ class SidebarWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
               child: Text(
-                'BARISTA POS',
+                context.watch<AppState>().storeProfile.storeName.isEmpty
+                    ? 'BARISTA POS'
+                    : context.watch<AppState>().storeProfile.storeName.toUpperCase(),
                 style: manrope(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -189,19 +198,18 @@ class _NavTileState extends State<_NavTile> {
             decoration: BoxDecoration(
               // Active: bg-white shadow-sm | Hover inactive: bg-stone-200/50
               color: widget.selected
-                  ? Colors.white
+                  ? DC.primary.withValues(alpha: 0.08) // Red-50 equivalent
                   : _hovered
-                      ? DC.stone200.withValues(alpha: 0.5)
+                      ? DC.surfaceContainerLow
                       : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: widget.selected
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 1),
+              borderRadius: BorderRadius.circular(8),
+              border: widget.selected
+                  ? Border(
+                      right: BorderSide(
+                        color: DC.primary,
+                        width: 4,
                       ),
-                    ]
+                    )
                   : null,
             ),
             child: Row(
@@ -210,7 +218,7 @@ class _NavTileState extends State<_NavTile> {
                 Icon(
                   widget.selected ? widget.activeIcon : widget.icon,
                   size: 22,
-                  color: widget.selected ? DC.stone900 : DC.stone500,
+                  color: widget.selected ? DC.primary : DC.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -221,7 +229,7 @@ class _NavTileState extends State<_NavTile> {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.8,
-                      color: widget.selected ? DC.stone900 : DC.stone500,
+                      color: widget.selected ? DC.primary : DC.onSurfaceVariant,
                     ),
                   ),
                 ),

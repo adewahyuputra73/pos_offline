@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "error-container": "#ffdad6",
+                  "on-primary-fixed": "#410004",
+                  "tertiary-fixed-dim": "#6fd6dd",
+                  "inverse-surface": "#2a303d",
+                  "on-secondary-container": "#5f6365",
+                  "surface-bright": "#f9f9ff",
+                  "secondary-fixed": "#e0e3e5",
+                  "on-secondary-fixed": "#181c1e",
+                  "background": "#f9f9ff",
+                  "on-secondary": "#ffffff",
+                  "tertiary-fixed": "#8cf2fa",
+                  "on-primary-fixed-variant": "#930013",
+                  "error": "#ba1a1a",
+                  "inverse-on-surface": "#ecf0ff",
+                  "surface-container-low": "#f1f3ff",
+                  "on-primary": "#ffffff",
+                  "on-primary-container": "#fffbff",
+                  "surface-dim": "#d4daea",
+                  "inverse-primary": "#ffb3ad",
+                  "on-tertiary-fixed": "#002022",
+                  "surface-container-highest": "#dde2f3",
+                  "outline": "#8f6f6d",
+                  "primary-fixed-dim": "#ffb3ad",
+                  "tertiary": "#00666c",
+                  "on-tertiary-container": "#f4ffff",
+                  "on-tertiary-fixed-variant": "#004f53",
+                  "secondary-fixed-dim": "#c3c7c9",
+                  "primary": "#b51822",
+                  "surface": "#f9f9ff",
+                  "on-surface-variant": "#5b403e",
+                  "primary-container": "#d93537",
+                  "surface-tint": "#b91c24",
+                  "surface-container-lowest": "#ffffff",
+                  "surface-variant": "#dde2f3",
+                  "on-surface": "#161c27",
+                  "on-tertiary": "#ffffff",
+                  "on-error": "#ffffff",
+                  "secondary-container": "#dde0e2",
+                  "tertiary-container": "#008188",
+                  "primary-fixed": "#ffdad7",
+                  "surface-container": "#e8eeff",
+                  "on-background": "#161c27",
+                  "on-error-container": "#93000a",
+                  "surface-container-high": "#e3e8f9",
+                  "outline-variant": "#e4beba",
+                  "secondary": "#5b5f61",
+                  "on-secondary-fixed-variant": "#434749"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "xs": "4px",
+                  "gutter": "16px",
+                  "sm": "8px",
+                  "lg": "24px",
+                  "md": "16px",
+                  "container-margin": "24px",
+                  "xl": "32px",
+                  "unit": "4px"
+          },
+          "fontFamily": {
+                  "h2": ["Inter"],
+                  "price-display": ["Inter"],
+                  "body-md": ["Inter"],
+                  "body-lg": ["Inter"],
+                  "display": ["Inter"],
+                  "h1": ["Inter"],
+                  "label-sm": ["Inter"]
+          },
+          "fontSize": {
+                  "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                  "price-display": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                  "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                  "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "h1": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased">
+<!-- SideNavBar Shell -->
+<aside class="flex flex-col fixed left-0 top-0 h-full z-40 h-screen w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 font-['Inter'] antialiased text-sm font-medium">
+<div class="p-lg">
+<h1 class="text-xl font-black text-red-600 dark:text-red-500 tracking-tight">SwiftPOS</h1>
+<p class="text-xs text-gray-500 mt-xs">Terminal 01</p>
+</div>
+<nav class="flex-1 px-sm">
+<div class="space-y-1">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Orders (Active) -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-r-4 border-red-600 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<span>Orders</span>
+</a>
+<!-- Products -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Products</span>
+</a>
+<!-- Customers -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Customers</span>
+</a>
+<!-- Reports -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span>Reports</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</nav>
+<div class="p-sm mt-auto border-t border-gray-100 dark:border-gray-800">
+<button class="w-full flex items-center gap-3 px-md py-sm rounded-lg text-gray-600 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</button>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center px-6 sticky top-0 z-30 ml-64 w-[calc(100%-16rem)] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md w-full h-16 border-b border-gray-200 dark:border-gray-800 shadow-sm font-['Inter'] text-sm font-semibold">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Search transactions..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="text-gray-500 hover:text-red-600 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-gray-500 hover:text-red-600 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<div class="flex items-center gap-3 border-l pl-6 border-gray-200">
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface">Alex Manager</p>
+<p class="text-[10px] text-gray-500">Super Admin</p>
+</div>
+<img alt="Manager Portrait" class="w-10 h-10 rounded-full object-cover ring-2 ring-white" data-alt="A professional portrait of a modern store manager in a brightly lit retail environment. The individual is wearing a smart-casual outfit in a minimalist white space with subtle red accents in the background. The lighting is soft and high-key, emphasizing a clean and efficient workspace aesthetic consistent with a premium POS dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWIoykR5avmDns3Oa9WRNMcTw2sE__lPszeLzKbhAbSwlWfepsn0BpjKZijG8oVugTpwCGCNblPdmkqJ9WT5zJa4YzS34Kvf1LfxKEvwGaXqQ65mPB2e85ClaJ-nWME_ZEf6AlDf8FcjxaBWhaTiP5zvU4Fl4zMzuksJQJbHQAmCAOUmvd63FER_gqMiRvE8VmVE905LzJwjOmP4r7-RYi8X-sa1XrlY6SsiXkd8eg4oflioaQuPa4YZyd8LzKN70Z_2Zr825VtEfJ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-lg bg-surface min-h-[calc(100vh-4rem)]">
+<div class="max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-xl">
+<div>
+<h2 class="font-display text-display text-on-surface">Transaction History</h2>
+<p class="font-body-md text-secondary mt-1">Review and manage past sales records from Terminal 01.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 px-md py-2 bg-white border border-outline-variant text-on-surface rounded-lg font-label-sm hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+            Filter Date
+          </button>
+<button class="flex items-center gap-2 px-md py-2 bg-primary text-on-primary rounded-lg font-label-sm hover:bg-primary-container shadow-sm transition-all">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+            Export CSV
+          </button>
+</div>
+</div>
+<!-- Transaction Bento Grid / Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+<div class="bg-white p-lg rounded-xl border border-gray-100 shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<p class="text-secondary font-label-sm uppercase tracking-wider mb-sm">Today's Revenue</p>
+<div class="flex items-baseline gap-2">
+<span class="font-price-display text-price-display text-primary">$4,280.50</span>
+<span class="text-xs font-bold text-tertiary-container bg-tertiary-container/10 px-2 py-0.5 rounded-full">+12%</span>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-gray-100 shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<p class="text-secondary font-label-sm uppercase tracking-wider mb-sm">Sales Count</p>
+<div class="flex items-baseline gap-2">
+<span class="font-price-display text-price-display text-on-surface">142</span>
+<span class="text-xs font-bold text-gray-500">Transactions</span>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-gray-100 shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<p class="text-secondary font-label-sm uppercase tracking-wider mb-sm">Average Ticket</p>
+<div class="flex items-baseline gap-2">
+<span class="font-price-display text-price-display text-on-surface">$30.14</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
+</div>
+</div>
+</div>
+<!-- Transaction Table Section -->
+<div class="bg-white rounded-xl border border-gray-100 shadow-[0px_4px_12px_rgba(0,0,0,0.05)] overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50/50 border-b border-gray-100">
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider">Order ID</th>
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider">Date &amp; Time</th>
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider">Items</th>
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider">Total Price</th>
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider">Payment Method</th>
+<th class="px-lg py-md font-label-sm text-secondary uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-50">
+<!-- Row 1 -->
+<tr class="hover:bg-gray-50/80 transition-colors">
+<td class="px-lg py-lg">
+<span class="font-bold text-on-surface">#94021</span>
+</td>
+<td class="px-lg py-lg text-secondary font-body-md">
+                  Oct 24, 2023 <span class="text-xs block text-gray-400">14:23 PM</span>
+</td>
+<td class="px-lg py-lg">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-primary-fixed">2x</div>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-secondary-fixed">1x</div>
+</div>
+<span class="text-xs mt-1 block text-gray-500">Espresso, Avocado Toast...</span>
+</td>
+<td class="px-lg py-lg font-bold text-on-surface">$45.00</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">credit_card</span>
+<span class="text-on-surface font-body-md">Credit Card</span>
+</div>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-primary font-label-sm hover:underline hover:text-primary-container transition-colors">View Receipt</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-gray-50/80 transition-colors">
+<td class="px-lg py-lg">
+<span class="font-bold text-on-surface">#94020</span>
+</td>
+<td class="px-lg py-lg text-secondary font-body-md">
+                  Oct 24, 2023 <span class="text-xs block text-gray-400">13:58 PM</span>
+</td>
+<td class="px-lg py-lg text-secondary">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-primary-fixed">1x</div>
+<span class="text-xs mt-1 block text-gray-500">Matcha Latte</span>
+</td>
+<td class="px-lg py-lg font-bold text-on-surface">$7.50</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">payments</span>
+<span class="text-on-surface font-body-md">Cash</span>
+</div>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-primary font-label-sm hover:underline hover:text-primary-container transition-colors">View Receipt</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-gray-50/80 transition-colors">
+<td class="px-lg py-lg">
+<span class="font-bold text-on-surface">#94019</span>
+</td>
+<td class="px-lg py-lg text-secondary font-body-md">
+                  Oct 24, 2023 <span class="text-xs block text-gray-400">12:15 PM</span>
+</td>
+<td class="px-lg py-lg text-secondary">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-primary-fixed">3x</div>
+<div class="w-8 h-8 rounded-full bg-secondary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-secondary-fixed">2x</div>
+<div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600">+1</div>
+</div>
+<span class="text-xs mt-1 block text-gray-500">Pastry Assortment, Juice...</span>
+</td>
+<td class="px-lg py-lg font-bold text-on-surface">$128.40</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">tap_and_play</span>
+<span class="text-on-surface font-body-md">Digital Wallet</span>
+</div>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-primary font-label-sm hover:underline hover:text-primary-container transition-colors">View Receipt</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-gray-50/80 transition-colors">
+<td class="px-lg py-lg">
+<span class="font-bold text-on-surface">#94018</span>
+</td>
+<td class="px-lg py-lg text-secondary font-body-md">
+                  Oct 24, 2023 <span class="text-xs block text-gray-400">11:42 AM</span>
+</td>
+<td class="px-lg py-lg text-secondary">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-primary-fixed">2x</div>
+<span class="text-xs mt-1 block text-gray-500">Bagel with Cream Cheese</span>
+</td>
+<td class="px-lg py-lg font-bold text-on-surface">$12.00</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">credit_card</span>
+<span class="text-on-surface font-body-md">Credit Card</span>
+</div>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-primary font-label-sm hover:underline hover:text-primary-container transition-colors">View Receipt</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-gray-50/80 transition-colors">
+<td class="px-lg py-lg">
+<span class="font-bold text-on-surface">#94017</span>
+</td>
+<td class="px-lg py-lg text-secondary font-body-md">
+                  Oct 24, 2023 <span class="text-xs block text-gray-400">10:05 AM</span>
+</td>
+<td class="px-lg py-lg text-secondary">
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-white flex items-center justify-center text-[10px] font-bold text-on-primary-fixed">1x</div>
+<span class="text-xs mt-1 block text-gray-500">Iced Americano</span>
+</td>
+<td class="px-lg py-lg font-bold text-on-surface">$4.50</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">payments</span>
+<span class="text-on-surface font-body-md">Cash</span>
+</div>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-primary font-label-sm hover:underline hover:text-primary-container transition-colors">View Receipt</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-lg py-md bg-gray-50/30 flex items-center justify-between border-t border-gray-100">
+<p class="text-xs text-secondary">Showing 5 of 1,248 transactions</p>
+<div class="flex gap-2">
+<button class="p-2 border border-gray-200 rounded-lg text-secondary hover:bg-white transition-colors disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="px-4 py-1.5 bg-white border border-primary text-primary rounded-lg font-bold text-xs">1</button>
+<button class="px-4 py-1.5 hover:bg-white border border-transparent hover:border-gray-200 rounded-lg text-secondary text-xs">2</button>
+<button class="px-4 py-1.5 hover:bg-white border border-transparent hover:border-gray-200 rounded-lg text-secondary text-xs">3</button>
+<button class="p-2 border border-gray-200 rounded-lg text-secondary hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Detail Card (Asymmetric Layout Example) -->
+<div class="mt-xl grid grid-cols-1 lg:grid-cols-4 gap-lg">
+<div class="lg:col-span-3 bg-white p-xl rounded-xl border border-gray-100 shadow-[0px_4px_12px_rgba(0,0,0,0.05)] relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+<div class="relative z-10">
+<h3 class="font-h2 text-h2 text-on-surface mb-sm">Terminal Health &amp; Performance</h3>
+<p class="text-secondary font-body-md max-w-2xl mb-lg">Terminal 01 has processed 14% more transactions today compared to your weekly average. All hardware components are reporting optimal status.</p>
+<div class="flex gap-lg">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-tertiary-container rounded-full"></div>
+<span class="text-sm font-bold text-on-surface">Printer Online</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-tertiary-container rounded-full"></div>
+<span class="text-sm font-bold text-on-surface">Card Reader Ready</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-tertiary-container rounded-full"></div>
+<span class="text-sm font-bold text-on-surface">Cloud Sync Active</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary text-on-primary p-xl rounded-xl shadow-[0px_10px_25px_rgba(181,24,34,0.2)] flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-[48px] mb-md" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<h4 class="font-bold text-lg mb-xs">Daily Insight</h4>
+<p class="text-xs opacity-90 leading-relaxed">Peak hours were between 12:00 PM and 1:30 PM. Ensure staff coverage is maximized for this window tomorrow.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB Suppression: Contextually suppressed on transaction history for clarity -->
+</body></html>

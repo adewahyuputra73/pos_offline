@@ -98,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
       confirmLabel: 'Hapus',
     );
     if (ok != true) return;
-    await state.deleteAllTransactions();
+    await state.clearTransactions();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Semua transaksi telah dihapus.')),

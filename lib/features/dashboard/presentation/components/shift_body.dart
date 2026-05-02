@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:border_po/models/shift.dart';
-import 'package:border_po/models/transaction.dart';
 import 'package:border_po/state/app_state.dart';
 import 'package:border_po/utils/formatters.dart';
 import '../theme/dashboard_colors.dart';
@@ -34,7 +33,7 @@ class ShiftBody extends StatelessWidget {
               children: [
                 // ── Status shift aktif atau tombol buka ──────────────────────
                 if (state.hasActiveShift)
-                  _ActiveShiftCard(shift: state.activeShift!, state: state)
+                  _ActiveShiftCard(key: ValueKey(state.activeShift!.id), shift: state.activeShift!)
                 else
                   _NoShiftCard(),
 
@@ -113,20 +112,13 @@ class _NoShiftCard extends StatelessWidget {
 
 // ── Card: shift sedang aktif ──────────────────────────────────────────────────
 
-class _ActiveShiftCard extends StatefulWidget {
+class _ActiveShiftCard extends StatelessWidget {
   final Shift shift;
-  final AppState state;
-  const _ActiveShiftCard({required this.shift, required this.state});
+  const _ActiveShiftCard({super.key, required this.shift});
 
-  @override
-  State<_ActiveShiftCard> createState() => _ActiveShiftCardState();
-}
-
-class _ActiveShiftCardState extends State<_ActiveShiftCard> {
   @override
   Widget build(BuildContext context) {
-    final shift = widget.shift;
-    final state = widget.state;
+    final state = context.watch<AppState>();
 
     return Container(
       decoration: BoxDecoration(
@@ -527,7 +519,9 @@ class _HistoryRow extends StatelessWidget {
 class _OpenShiftSheet {
   static Future<void> show(BuildContext context) {
     final state = context.read<AppState>();
-    final nameCtrl = TextEditingController();
+    // Pre-fill dengan nama kasir terakhir yang pernah buka shift
+    final lastCashierName = state.shifts.isNotEmpty ? state.shifts.first.cashierName : '';
+    final nameCtrl = TextEditingController(text: lastCashierName);
     final cashCtrl = TextEditingController();
 
     return showModalBottomSheet<void>(

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#410004",
+                    "tertiary-fixed-dim": "#6fd6dd",
+                    "inverse-surface": "#2a303d",
+                    "on-secondary-container": "#5f6365",
+                    "surface-bright": "#f9f9ff",
+                    "secondary-fixed": "#e0e3e5",
+                    "on-secondary-fixed": "#181c1e",
+                    "background": "#f9f9ff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#8cf2fa",
+                    "on-primary-fixed-variant": "#930013",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#ecf0ff",
+                    "surface-container-low": "#f1f3ff",
+                    "on-primary": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "surface-dim": "#d4daea",
+                    "inverse-primary": "#ffb3ad",
+                    "on-tertiary-fixed": "#002022",
+                    "surface-container-highest": "#dde2f3",
+                    "outline": "#8f6f6d",
+                    "primary-fixed-dim": "#ffb3ad",
+                    "tertiary": "#00666c",
+                    "on-tertiary-container": "#f4ffff",
+                    "on-tertiary-fixed-variant": "#004f53",
+                    "secondary-fixed-dim": "#c3c7c9",
+                    "primary": "#b51822",
+                    "surface": "#f9f9ff",
+                    "on-surface-variant": "#5b403e",
+                    "primary-container": "#d93537",
+                    "surface-tint": "#b91c24",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#dde2f3",
+                    "on-surface": "#161c27",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "secondary-container": "#dde0e2",
+                    "tertiary-container": "#008188",
+                    "primary-fixed": "#ffdad7",
+                    "surface-container": "#e8eeff",
+                    "on-background": "#161c27",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#e3e8f9",
+                    "outline-variant": "#e4beba",
+                    "secondary": "#5b5f61",
+                    "on-secondary-fixed-variant": "#434749"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "container-margin": "24px",
+                    "xl": "32px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "h2": ["Inter"],
+                    "price-display": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display": ["Inter"],
+                    "h1": ["Inter"],
+                    "label-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "price-display": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                    "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h1": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md selection:bg-primary/20">
+<!-- SideNavBar Shell -->
+<aside class="flex flex-col fixed left-0 top-0 h-full z-40 bg-white dark:bg-gray-900 h-screen w-64 border-r border-gray-200 dark:border-gray-800 font-['Inter'] antialiased text-sm font-medium">
+<div class="p-lg flex items-center gap-sm">
+<span class="material-symbols-outlined text-xl font-black text-red-600 dark:text-red-500 tracking-tight" data-icon="dashboard">dashboard</span>
+<div>
+<h1 class="text-xl font-black text-red-600 dark:text-red-500 tracking-tight">SwiftPOS</h1>
+<p class="text-[10px] text-secondary opacity-70">Terminal 01</p>
+</div>
+</div>
+<nav class="flex-1 mt-md px-md">
+<!-- Dashboard Tab Active -->
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-r-4 border-red-600" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Customers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm mb-xs rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-md py-lg border-t border-gray-200 dark:border-gray-800">
+<a class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center px-6 sticky top-0 z-30 ml-64 w-[calc(100%-16rem)] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md w-full h-16 border-b border-gray-200 dark:border-gray-800 shadow-sm font-['Inter'] text-sm font-semibold">
+<div class="flex items-center gap-lg flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400" placeholder="Search orders, products..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<button class="relative text-gray-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+</button>
+<button class="text-gray-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="flex items-center gap-sm ml-sm">
+<div class="text-right">
+<p class="text-xs text-on-surface block">Alex Manager</p>
+<p class="text-[10px] text-secondary font-normal block leading-none">Admin</p>
+</div>
+<img alt="Manager Portrait" class="w-8 h-8 rounded-full object-cover border border-gray-200" data-alt="A professional manager portrait for a modern retail software environment, featuring high-key lighting and a clean aesthetic. The manager is wearing smart business casual attire, set against a blurred background of a brightly lit, contemporary retail terminal office with warm wood accents and minimalist design. The overall mood is reliable, professional, and technologically focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBngp3YQBQTke8TXFlu00AOBLhL10ubOV_lMU9kK2vkrcae79ipGKULkeyyVdZiOx-sDyoIzJTFuwQfru-YSE5dkMb81rfQ3Nhe8ueA5MDiq3bRMbZ_fShO6ZadQ34ofri3xKemEMtczTdguIx1NL1NgzJh4U-Zha4eNpUCcuPBJI46TaYpqKNO2UuuUrRYa58HZIG-t8hcTLc-hQveex_OL18z1p_a81q_0anrVELMgHfWhbG-bbEPHSBM_0hIl22LyEPab72tQmEs"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-lg min-h-[calc(100vh-4rem)]">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
+<div>
+<h2 class="font-display text-display text-on-surface">Daily Overview</h2>
+<p class="text-secondary font-body-md mt-1">Real-time performance metrics for terminal 01</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-white border border-outline-variant rounded-lg text-label-sm font-semibold hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+                    Today
+                    <span class="material-symbols-outlined text-[16px]" data-icon="expand_more">expand_more</span>
+</button>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded-lg text-label-sm font-semibold hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]" data-icon="download">download</span>
+                    Export Report
+                </button>
+</div>
+</div>
+<!-- Metrics Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+<!-- Revenue Card -->
+<div class="bg-white p-lg rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="payments" style="font-variation-settings: 'FILL' 1;">payments</span>
+</div>
+<span class="flex items-center gap-xs text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                        12.5%
+                    </span>
+</div>
+<p class="text-secondary text-label-sm uppercase tracking-wider mb-xs">Total Revenue</p>
+<p class="font-price-display text-price-display">$12,482.50</p>
+</div>
+<!-- Orders Card -->
+<div class="bg-white p-lg rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="receipt_long" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+</div>
+<span class="flex items-center gap-xs text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                        8.2%
+                    </span>
+</div>
+<p class="text-secondary text-label-sm uppercase tracking-wider mb-xs">Number of Orders</p>
+<p class="font-price-display text-price-display">142</p>
+</div>
+<!-- Average Ticket Card -->
+<div class="bg-white p-lg rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-md">
+<div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="confirmation_number" style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+</div>
+<span class="flex items-center gap-xs text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span>
+                        2.1%
+                    </span>
+</div>
+<p class="text-secondary text-label-sm uppercase tracking-wider mb-xs">Average Ticket</p>
+<p class="font-price-display text-price-display">$87.90</p>
+</div>
+</div>
+<!-- Sales Trend & Recent Activity Split -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Sales Trends Chart Section -->
+<div class="lg:col-span-2 bg-white p-lg rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<div class="flex items-center justify-between mb-xl">
+<h3 class="font-h2 text-h2">Sales Trends</h3>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-xs text-secondary font-medium">Gross Sales</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-3 h-3 rounded-full bg-gray-200"></span>
+<span class="text-xs text-secondary font-medium">Last Week</span>
+</div>
+</div>
+</div>
+<!-- Simplified Abstract Chart Representation -->
+<div class="relative h-64 w-full mt-lg">
+<div class="absolute inset-0 flex items-end justify-between px-sm">
+<!-- Chart Bars for visual depth -->
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[40%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[55%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[45%]"></div>
+<div class="w-8 bg-primary/20 rounded-t-sm h-[70%]"></div>
+<div class="w-8 bg-primary rounded-t-sm h-[85%]"></div>
+<div class="w-8 bg-primary/60 rounded-t-sm h-[65%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[50%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[40%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[60%]"></div>
+<div class="w-8 bg-surface-container-highest rounded-t-sm h-[55%]"></div>
+</div>
+<div class="absolute bottom-0 w-full h-[1px] bg-outline-variant"></div>
+<!-- Chart Labels -->
+<div class="absolute -bottom-8 w-full flex justify-between text-[10px] text-secondary font-bold uppercase tracking-tighter">
+<span>08:00</span>
+<span>10:00</span>
+<span>12:00</span>
+<span>14:00</span>
+<span>16:00</span>
+<span>18:00</span>
+<span>20:00</span>
+<span>22:00</span>
+</div>
+</div>
+</div>
+<!-- Recent Orders List -->
+<div class="bg-white rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col">
+<div class="p-lg border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-h2 text-h2">Recent Orders</h3>
+<button class="text-primary text-label-sm font-bold hover:underline">View All</button>
+</div>
+<div class="flex-1 overflow-y-auto max-h-[380px] scrollbar-hide">
+<!-- List Item 1 -->
+<div class="px-lg py-md flex items-center justify-between border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="restaurant">restaurant</span>
+</div>
+<div>
+<p class="text-sm font-bold">#4902 - Table 12</p>
+<p class="text-[11px] text-secondary">2 items • 4 mins ago</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold">$42.00</p>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-bold border border-green-100">PAID</span>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="px-lg py-md flex items-center justify-between border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="local_cafe">local_cafe</span>
+</div>
+<div>
+<p class="text-sm font-bold">#4901 - Takeaway</p>
+<p class="text-[11px] text-secondary">1 item • 12 mins ago</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold">$6.50</p>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-100">KITCHEN</span>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="px-lg py-md flex items-center justify-between border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="restaurant">restaurant</span>
+</div>
+<div>
+<p class="text-sm font-bold">#4900 - Table 04</p>
+<p class="text-[11px] text-secondary">5 items • 18 mins ago</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold">$124.90</p>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-bold border border-orange-100">PENDING</span>
+</div>
+</div>
+<!-- List Item 4 -->
+<div class="px-lg py-md flex items-center justify-between border-b border-outline-variant/50 hover:bg-surface-container-lowest transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="liquor">liquor</span>
+</div>
+<div>
+<p class="text-sm font-bold">#4899 - Bar 02</p>
+<p class="text-[11px] text-secondary">3 items • 24 mins ago</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold">$38.00</p>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-bold border border-green-100">PAID</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Activity Feed (Glassmorphism Accents) -->
+<div class="mt-xl grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="bg-surface-container-low p-lg rounded-xl border border-outline-variant">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-primary" data-icon="insights">insights</span>
+<h4 class="font-h1 text-h1">Inventory Insights</h4>
+</div>
+<div class="flex gap-md">
+<div class="flex-1 bg-white/50 backdrop-blur-sm p-md rounded-lg border border-white/60">
+<p class="text-[10px] uppercase font-bold text-secondary mb-1">Low Stock Alert</p>
+<p class="text-sm font-bold">Espresso Beans (2kg)</p>
+<div class="w-full bg-gray-200 h-1.5 rounded-full mt-2">
+<div class="bg-primary w-1/4 h-1.5 rounded-full"></div>
+</div>
+</div>
+<div class="flex-1 bg-white/50 backdrop-blur-sm p-md rounded-lg border border-white/60">
+<p class="text-[10px] uppercase font-bold text-secondary mb-1">Popular Today</p>
+<p class="text-sm font-bold">Iced Oat Latte</p>
+<p class="text-xs text-green-600 mt-2 font-bold">+24% vs. avg</p>
+</div>
+</div>
+</div>
+<div class="relative overflow-hidden group rounded-xl">
+<div class="absolute inset-0 bg-gradient-to-r from-primary to-primary-container opacity-90"></div>
+<img alt="Restaurant Interior" class="w-full h-full object-cover" data-alt="A cinematic, wide-angle shot of a high-end, contemporary restaurant interior during a busy service. The scene captures the organized chaos of a professional kitchen meeting a sleek, minimalist dining area. Warm ambient lighting contrasts with the cool glow of digital terminals. The overall aesthetic is one of efficiency, modern luxury, and vibrant commercial activity, using a palette of deep reds, clean whites, and charcoal grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5e4vMSMDYZ8P2Ovne-hQ3KxqNnsqDjwqAjFDfLluuryo372OHp3ZNvDyen9_d_jNiqLhrNA1rIoDBjPtgSu6udH2XF4174xF2J0XhSDEz-JFvxlzM1q20q8HyaaBW53PKiXXI8f1ZWZ1obCnLITNusCgTCt4VyTSifXqI47TGKdGZmH0JawLUrDc1hyxZmYCeJqJGeO_RBJVmHtcPYjilHv6PZ-85m5szQ8W5nwVbM7fmZXxg6VHX38yDku0qZscYPseW1-Kw_gce"/>
+<div class="absolute inset-0 p-lg flex flex-col justify-end">
+<h4 class="text-white font-display text-h1 mb-xs">Operational Status</h4>
+<p class="text-white/80 text-sm mb-md">All systems performing optimally. Network latency: 12ms.</p>
+<div class="flex gap-sm">
+<span class="inline-flex items-center gap-xs px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] text-white font-bold uppercase border border-white/30">
+<span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Online
+                        </span>
+<span class="inline-flex items-center gap-xs px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] text-white font-bold uppercase border border-white/30">
+                            Syncing Active
+                        </span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

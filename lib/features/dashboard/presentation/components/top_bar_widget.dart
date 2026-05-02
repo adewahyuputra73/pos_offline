@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:border_po/state/app_state.dart';
 import '../theme/dashboard_colors.dart';
 
 /// Sticky top header — mirrors `<header class="bg-stone-50 px-8 py-6 ...">`.
@@ -65,6 +67,14 @@ class _ProfileChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final cashierName = state.hasActiveShift
+        ? state.activeShift!.cashierName
+        : 'User';
+    final initials = cashierName.length >= 2
+        ? cashierName.substring(0, 2).toUpperCase()
+        : cashierName.toUpperCase();
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 8 : 16,
@@ -77,30 +87,21 @@ class _ProfileChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Avatar — HTML: w-8 h-8 rounded-full object-cover
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: Image.network(
-              'https://lh3.googleusercontent.com/aida-public/AB6AXuD0CQfV3xLuDuVWGh1_BHFRfiKDDXQhgXHB6ISQw8iFrkIrz4OX1o6ddhqMTw_z3k1-x3TMPqNM0njMRV9rFvGooJzGuqXx8v5IgY6Vg-iTxWUXhEx-9lCLKyVsS3fw_HVxScWjnbuAT9pdEZHcNVkVLVIYucWFvPd0OSl-Tv-dngSDK2kVp64MLJi4pqp7qb23e7NttmrDqhy-E_rz97A3MnjpsvtDdU8rg9Rsi8sSoU6VgwJAoo6tQgFnWS1Hga4KeBND8bThdK96',
-              width: 32,
-              height: 32,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: DC.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'AR',
-                  style: manrope(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DC.onPrimaryContainer,
-                  ),
-                ),
+          // Avatar circle with initials
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: state.hasActiveShift ? DC.primaryContainer : DC.surfaceContainerHigh,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initials,
+              style: manrope(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: state.hasActiveShift ? DC.onPrimaryContainer : DC.onSurfaceVariant,
               ),
             ),
           ),
@@ -108,7 +109,7 @@ class _ProfileChip extends StatelessWidget {
           if (!compact) ...[
             const SizedBox(width: 12),
             Text(
-              'Alex Rivera',
+              cashierName,
               style: manrope(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

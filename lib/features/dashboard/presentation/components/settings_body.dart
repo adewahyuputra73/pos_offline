@@ -129,6 +129,8 @@ class _StoreAndExportTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _StoreProfileCard(),
+              SizedBox(height: 24),
+              _DangerZoneCard(),
               SizedBox(height: 100),
             ],
           ),
@@ -379,6 +381,109 @@ class _StoreProfileCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Danger Zone Card (Wipe All Data) ────────────────────────────────────────
+
+class _DangerZoneCard extends StatelessWidget {
+  const _DangerZoneCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: DC.error.withValues(alpha: 0.1),
+        border: Border.all(color: DC.error.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: DC.error, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Zona Berbahaya',
+                style: manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: DC.error,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Menghapus semua data (produk, bahan baku, transaksi, riwayat shift, profil). Aplikasi akan kembali ke kondisi awal seperti baru di-install. Tindakan ini tidak bisa dibatalkan.',
+            style: manrope(
+              fontSize: 13,
+              color: DC.error,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.delete_forever_rounded, size: 18),
+            label: Text('Hapus Semua Data', style: manrope(fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: DC.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => _showConfirmDeleteDialog(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: DC.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_rounded, color: DC.error),
+            const SizedBox(width: 8),
+            Text('Hapus Semua Data?', style: manrope(fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus SEMUA data aplikasi? Semua produk, bahan baku, transaksi, dan riwayat shift akan hilang permanen.',
+          style: manrope(fontSize: 14, color: DC.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: manrope(color: DC.onSurfaceVariant, fontWeight: FontWeight.w700)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: DC.error),
+            onPressed: () async {
+              final state = context.read<AppState>();
+              await state.clearAllData();
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Semua data berhasil dihapus.', style: manrope(color: Colors.white)),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: Text('Ya, Hapus Semua', style: manrope(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
     );
   }
 }

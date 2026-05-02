@@ -131,30 +131,27 @@ class _CartHeader extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'Pesanan Aktif',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.2,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Order Summary',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                Text(
+                  '$totalQty Items',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
-          if (totalQty > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '$totalQty item',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: scheme.primary,
-                ),
-              ),
-            ),
           if (hasItems) ...[
             const SizedBox(width: 8),
             Tooltip(
@@ -168,7 +165,7 @@ class _CartHeader extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     child: Icon(
                       Icons.delete_sweep_rounded,
-                      color: scheme.error,
+                      color: scheme.onSurfaceVariant,
                       size: 22,
                     ),
                   ),

@@ -42,7 +42,10 @@ class BorderPoApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppState(storage),
       child: MaterialApp(
-        title: 'Barista POS',
+        onGenerateTitle: (context) {
+          final profileName = context.watch<AppState>().storeProfile.storeName;
+          return profileName.isNotEmpty ? profileName : 'Barista POS';
+        },
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         home: const HomeDashboardPage(),

@@ -212,7 +212,8 @@ class ReceiptDialog extends StatelessWidget {
                               children: [
                                 Text('Catatan Tambahan:', style: manrope(fontSize: 12, fontWeight: FontWeight.w700, color: DC.onSurfaceVariant)),
                                 const SizedBox(height: 8),
-                                Text('Terima kasih telah berbelanja di Barista POS. Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.', style: manrope(fontSize: 12, fontWeight: FontWeight.w500, color: DC.onSurfaceVariant, height: 1.5)),
+                                Text('Terima kasih telah berbelanja di ${state.storeProfile.storeName.isEmpty ? 'Barista POS' : state.storeProfile.storeName}. Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.', style: manrope(fontSize: 12, fontWeight: FontWeight.w500, color: DC.onSurfaceVariant, height: 1.5)),
+                                const SizedBox(height: 24),
                               ],
                             ),
                           ),
